@@ -1,0 +1,48 @@
+﻿---
+source: tui/src/multi_agents.rs
+expression: snapshot
+---
+• Spawning (gpt-5 high)
+  └ Working: Spawning agent
+  └ Summary: creating the requested child agent
+  └ progress: spawn request queued and waiting for a live thread
+  └ Next: wait for the spawned agent to come online
+  └ Compute 11! and reply with just the integer result.
+
+• Routing to agent
+  └ Working: Preparing handoff
+  └ Summary: routing the task to the target agent
+  └ progress: handoff request queued for delivery
+  └ Next: child agent should receive the assignment
+  └ Forwarded to: in-flight routing target
+  └ Please review the design and start the build.
+
+• Spawned Robie [explorer] (gpt-5 high)
+  └ Working: Spawn complete; agent is now running
+  └ Summary: spawned child agent is ready for the assigned stage
+  └ progress: spawn completed and runtime metadata attached
+  └ Next: parent should hand over the stage-specific work
+  └ Forwarded to: Robie [explorer]
+  └ Compute 11! and reply with just the integer result.
+
+• Forwarded to Robie [explorer]
+  └ Working: Handoff delivered
+  └ Summary: task routed to the child agent
+  └ progress: input sent to agent
+  └ Next: wait for the child agent to respond
+  └ Blocked: waiting on agent response
+  └ Please continue and return the answer only.
+
+• Blocked on Robie [explorer]
+  └ Working: Waiting for agent response
+  └ Summary: a single child agent is still running
+  └ progress: no final status has been received yet
+  └ Next: parent should wait or retry if needed
+  └ Blocked: waiting on Robie [explorer]
+
+• Finished waiting
+  └ Robie [explorer]: Completed - 39916800
+    Bob [worker]: Error - tool timeout
+    Summary: 1/2 agents approved
+
+• Closed Robie [explorer]

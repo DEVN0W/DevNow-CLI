@@ -1,0 +1,11 @@
+﻿---
+source: tui/src/multi_agents.rs
+expression: snapshot
+---
+• Routing to agent
+  └ Working: Preparing handoff
+  └ Summary: routing the task to the target agent
+  └ progress: handoff request queued for delivery
+  └ Next: child agent should receive the assignment
+  └ Forwarded to: in-flight routing target
+  └ Please review the design and start the build.

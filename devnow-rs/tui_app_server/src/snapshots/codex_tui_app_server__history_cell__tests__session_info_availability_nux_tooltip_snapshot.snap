@@ -1,0 +1,12 @@
+---
+source: tui_app_server/src/history_cell.rs
+expression: rendered
+---
+╭─────────────────────────────────────╮
+│ ◉▌  DevNow AI (v0.0.0)                │
+│                                     │
+│ model:     gpt-5   /model to change │
+│ directory: /tmp/project             │
+╰─────────────────────────────────────╯
+
+  Tip: Model just became available

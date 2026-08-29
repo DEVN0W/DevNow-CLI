@@ -1,0 +1,10 @@
+﻿---
+source: tui/src/multi_agents.rs
+expression: cell_to_text(&cell)
+---
+• Spawn pending Herschel [developer] (gpt-5.4 medium)
+  └ Working: Spawn still pending; waiting for the spawned thread id
+  └ Summary: spawn completed but the thread id has not been surfaced yet
+  └ progress: waiting for the backend spawn event to complete
+  └ Next: keep waiting for the spawned agent to come online
+  └ Reason: No spawned thread id was returned

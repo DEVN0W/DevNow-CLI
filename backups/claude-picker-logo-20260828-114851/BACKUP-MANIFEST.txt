@@ -1,0 +1,10 @@
+﻿devnow-rs\core\src\client.rs
+devnow-rs\core\src\config\mod.rs
+devnow-rs\core\src\devnow_gateway.rs
+devnow-rs\core\src\models_manager\manager.rs
+devnow-rs\tui\src\history_cell.rs
+devnow-rs\tui\src\devnow_logo.rs
+devnow-rs\tui_app_server\src\history_cell.rs
+devnow-rs\tui_app_server\src\devnow_logo.rs
+scripts\generate_devnow_logo.py
+devnow-rs\core\src\codex.rs

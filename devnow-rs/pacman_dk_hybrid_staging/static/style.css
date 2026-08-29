@@ -1,0 +1,103 @@
+:root {
+  --bg-ink: #0f1722;
+  --bg-glow: #17273c;
+  --panel: rgba(8, 15, 28, 0.88);
+  --line: rgba(145, 193, 255, 0.25);
+  --cream: #f6f2df;
+  --gold: #f8c44f;
+  --mint: #85f0ba;
+  --red: #ff7362;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+  color: var(--cream);
+  background:
+    radial-gradient(circle at top, rgba(90, 150, 255, 0.25), transparent 38%),
+    linear-gradient(160deg, #07111d 0%, #122033 45%, #050911 100%);
+}
+
+.shell {
+  width: min(1100px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 28px 0 36px;
+}
+
+.hero {
+  padding: 10px 4px 18px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-size: 0.8rem;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  line-height: 0.95;
+}
+
+.lede {
+  max-width: 56rem;
+  margin: 12px 0 0;
+  color: rgba(246, 242, 223, 0.84);
+}
+
+.game-panel {
+  padding: 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(8px);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 20px;
+  border: 1px solid rgba(180, 221, 255, 0.2);
+  background: linear-gradient(180deg, #081017 0%, #111d29 100%);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 22px;
+  margin-top: 16px;
+  color: rgba(246, 242, 223, 0.84);
+  font-size: 0.95rem;
+}
+
+.controls strong {
+  color: var(--mint);
+  margin-right: 6px;
+}
+
+@media (max-width: 720px) {
+  .shell {
+    width: min(100vw - 18px, 1100px);
+    padding-top: 18px;
+  }
+
+  .game-panel {
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .controls {
+    font-size: 0.9rem;
+    gap: 10px 14px;
+  }
+}

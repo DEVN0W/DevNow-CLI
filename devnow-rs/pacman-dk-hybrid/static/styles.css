@@ -1,0 +1,189 @@
+:root {
+  --bg: #0c1021;
+  --panel: rgba(11, 17, 39, 0.88);
+  --panel-border: rgba(126, 224, 255, 0.2);
+  --text: #f4f8ff;
+  --muted: #91a0c4;
+  --accent: #ffd166;
+  --accent-2: #7ef0d2;
+  --danger: #ff6b6b;
+  --maze-wall: #183153;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top, rgba(72, 187, 255, 0.18), transparent 40%),
+    linear-gradient(160deg, #050814 0%, #0b1224 50%, #130f2e 100%);
+}
+
+.page {
+  width: min(1200px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 24px 0 40px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-end;
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent-2);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.6rem, 5vw, 4.2rem);
+  line-height: 0.92;
+}
+
+.tagline {
+  margin: 14px 0 0;
+  max-width: 42rem;
+  color: var(--muted);
+}
+
+.meta {
+  display: flex;
+  gap: 14px;
+  margin-top: 14px;
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(100px, 140px));
+  gap: 14px;
+}
+
+.hud-card,
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+}
+
+.hud-card {
+  padding: 14px 16px;
+  border-radius: 18px;
+}
+
+.label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.hud-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.8rem;
+}
+
+.game-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  gap: 18px;
+  align-items: start;
+}
+
+#gameCanvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(4, 10, 23, 0.9), rgba(7, 11, 29, 0.98));
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
+}
+
+.panel {
+  padding: 18px 20px;
+  border-radius: 20px;
+}
+
+.panel h2 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+
+.panel p,
+.panel ol,
+.legend {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.panel ol {
+  padding-left: 20px;
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin-top: 14px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  margin-right: 8px;
+}
+
+.swatch.player { background: #ffe66d; }
+.swatch.ghost { background: #ff6b6b; }
+.swatch.pellet { background: #7ef0d2; }
+.swatch.hazard { background: #ff8c42; }
+.swatch.ladder { background: #8ec5ff; }
+
+@media (max-width: 980px) {
+  .hero,
+  .game-shell {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .hud {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    width: min(100vw - 16px, 100%);
+    padding-top: 16px;
+  }
+
+  .hud {
+    grid-template-columns: 1fr;
+  }
+
+  .legend {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,7 @@
+devnow-rs\core\src\models_manager\manager.rs
+devnow-rs\tui\src\history_cell.rs
+devnow-rs\tui\src\lib.rs
+devnow-rs\tui\src\devnow_logo.rs
+devnow-rs\tui_app_server\src\history_cell.rs
+devnow-rs\tui_app_server\src\lib.rs
+devnow-rs\tui_app_server\src\devnow_logo.rs

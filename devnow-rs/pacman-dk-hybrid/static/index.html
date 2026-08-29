@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maze Climber</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Original hybrid arcade prototype</p>
+        <h1>Maze Climber</h1>
+        <p class="tagline">Clear a neon maze, then sprint up a hazard tower before the next cycle starts.</p>
+        <div class="meta">
+          <span id="statusText">Loading game data...</span>
+          <span id="cycleText">Cycle 1</span>
+        </div>
+      </div>
+      <div class="hud">
+        <div class="hud-card">
+          <span class="label">Score</span>
+          <strong id="scoreValue">0</strong>
+        </div>
+        <div class="hud-card">
+          <span class="label">Lives</span>
+          <strong id="livesValue">3</strong>
+        </div>
+        <div class="hud-card">
+          <span class="label">Stage</span>
+          <strong id="stageValue">Maze</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="game-shell">
+      <canvas id="gameCanvas" width="960" height="640" aria-label="Maze Climber game canvas"></canvas>
+      <aside class="panel">
+        <h2>Controls</h2>
+        <p>Move with arrow keys or WASD. Press <strong>Space</strong> to jump in the platform stage. Press <strong>Enter</strong> to start or restart.</p>
+        <h2>Loop</h2>
+        <ol>
+          <li>Collect every pellet in the maze while avoiding ghosts.</li>
+          <li>Climb the platform tower and reach the signal beacon.</li>
+          <li>Each cleared tower starts a harder maze cycle.</li>
+        </ol>
+        <div class="legend">
+          <div><span class="swatch player"></span> Player</div>
+          <div><span class="swatch ghost"></span> Ghost</div>
+          <div><span class="swatch pellet"></span> Pellet</div>
+          <div><span class="swatch hazard"></span> Hazard</div>
+          <div><span class="swatch ladder"></span> Ladder</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

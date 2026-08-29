@@ -1,0 +1,11 @@
+packages:
+  - devnow-cli
+  - devnow-rs/responses-api-proxy/npm
+  - sdk/typescript
+
+ignoredBuiltDependencies:
+  - esbuild
+
+minimumReleaseAge: 10080
+
+blockExoticSubdeps: true
