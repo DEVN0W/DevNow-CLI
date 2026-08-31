@@ -221,6 +221,7 @@ impl MessageProcessor {
                 default_mode_request_user_input: config
                     .features
                     .enabled(Feature::DefaultModeRequestUserInput),
+                agentic_team: None,
                 multi_agent_team: None,
             },
             environment_manager,

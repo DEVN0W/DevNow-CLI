@@ -85,7 +85,6 @@ use codex_core::config::types::ApprovalsReviewer;
 use codex_core::config::types::ModelAvailabilityNuxConfig;
 use codex_core::config_loader::ConfigLayerStackOrdering;
 use codex_core::message_history;
-use codex_core::models_manager::collaboration_mode_presets::CollaborationModesConfig;
 use codex_core::models_manager::model_presets::HIDE_GPT_5_1_CODEX_MAX_MIGRATION_PROMPT_CONFIG;
 use codex_core::models_manager::model_presets::HIDE_GPT5_1_MIGRATION_PROMPT_CONFIG;
 #[cfg(target_os = "windows")]
@@ -3172,14 +3171,15 @@ impl App {
         if let Some(updated_model) = config.model.clone() {
             model = updated_model;
         }
-        let model_catalog = Arc::new(ModelCatalog::new(
+        let agentic_team =
+            codex_core::models_manager::agentic_team::load_agentic_team(&config.codex_home)
+                .inspect_err(|err| tracing::warn!("failed to load agent mentions: {err}"))
+                .ok()
+                .flatten();
+        let model_catalog = Arc::new(ModelCatalog::with_collaboration_modes(
             available_models.clone(),
-            CollaborationModesConfig {
-                default_mode_request_user_input: config
-                    .features
-                    .enabled(Feature::DefaultModeRequestUserInput),
-                multi_agent_team: None,
-            },
+            bootstrap.collaboration_modes,
+            agentic_team,
         ));
         let feedback_audience = bootstrap.feedback_audience;
         let auth_mode = bootstrap.auth_mode;

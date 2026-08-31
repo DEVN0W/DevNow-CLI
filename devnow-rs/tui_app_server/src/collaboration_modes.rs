@@ -1,5 +1,6 @@
 use codex_protocol::config_types::CollaborationModeMask;
 use codex_protocol::config_types::ModeKind;
+use codex_protocol::config_types::TOP_LEVEL_OPERATING_MODES;
 
 use crate::model_catalog::ModelCatalog;
 
@@ -12,21 +13,24 @@ fn filtered_presets(model_catalog: &ModelCatalog) -> Vec<CollaborationModeMask> 
 }
 
 pub(crate) fn presets_for_tui(model_catalog: &ModelCatalog) -> Vec<CollaborationModeMask> {
-    filtered_presets(model_catalog)
+    let presets = filtered_presets(model_catalog);
+    TOP_LEVEL_OPERATING_MODES
+        .iter()
+        .filter_map(|mode| {
+            presets
+                .iter()
+                .find(|mask| mask.mode == Some(*mode))
+                .cloned()
+        })
+        .collect()
 }
 
 pub(crate) fn default_mask(model_catalog: &ModelCatalog) -> Option<CollaborationModeMask> {
     let presets = filtered_presets(model_catalog);
     presets
         .iter()
-        .find(|mask| mask.mode == Some(ModeKind::MultiAgent))
+        .find(|mask| mask.mode == Some(ModeKind::Default))
         .cloned()
-        .or_else(|| {
-            presets
-                .iter()
-                .find(|mask| mask.mode == Some(ModeKind::Default))
-                .cloned()
-        })
         .or_else(|| presets.into_iter().next())
 }
 
@@ -47,7 +51,7 @@ pub(crate) fn next_mask(
     model_catalog: &ModelCatalog,
     current: Option<&CollaborationModeMask>,
 ) -> Option<CollaborationModeMask> {
-    let presets = filtered_presets(model_catalog);
+    let presets = presets_for_tui(model_catalog);
     if presets.is_empty() {
         return None;
     }
@@ -57,6 +61,15 @@ pub(crate) fn next_mask(
         .position(|mask| mask.mode == current_kind)
         .map_or(0, |idx| (idx + 1) % presets.len());
     presets.get(next_index).cloned()
+}
+
+pub(crate) const fn description(kind: ModeKind) -> &'static str {
+    match kind {
+        ModeKind::Default => "Handle the work directly with one AI.",
+        ModeKind::Agentic => "Delegate manually to configured agents when useful.",
+        ModeKind::MultiAgent => "Automatically run the configured strategic workflow.",
+        ModeKind::Plan | ModeKind::PairProgramming | ModeKind::Execute => "",
+    }
 }
 
 pub(crate) fn default_mode_mask(model_catalog: &ModelCatalog) -> Option<CollaborationModeMask> {

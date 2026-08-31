@@ -27,6 +27,7 @@ use crate::render::renderable::Renderable;
 use crate::render::renderable::RenderableItem;
 use crate::tui::FrameRequester;
 use bottom_pane_view::BottomPaneView;
+use codex_core::models_manager::agentic_team::AgenticAgentConfig;
 use codex_core::plugins::PluginCapabilitySummary;
 use codex_core::skills::model::SkillMetadata;
 use codex_features::Features;
@@ -262,6 +263,11 @@ impl BottomPane {
 
     pub fn set_plugin_mentions(&mut self, plugins: Option<Vec<PluginCapabilitySummary>>) {
         self.composer.set_plugin_mentions(plugins);
+        self.request_redraw();
+    }
+
+    pub fn set_agent_mentions(&mut self, agents: Vec<AgenticAgentConfig>) {
+        self.composer.set_agent_mentions(agents);
         self.request_redraw();
     }
 

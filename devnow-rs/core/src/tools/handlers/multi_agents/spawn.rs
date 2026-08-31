@@ -1,9 +1,9 @@
 use super::*;
 use crate::agent::control::SpawnAgentOptions;
 use crate::agent::role::DEFAULT_ROLE_NAME;
-use crate::agent::role::apply_role_to_config;
-use crate::tools::handlers::multi_agents_common::apply_multi_agent_team_overrides;
-use crate::tools::handlers::multi_agents_common::resolve_multi_agent_role_name;
+use crate::tools::handlers::multi_agents_common::apply_mode_agent_role_config;
+use crate::tools::handlers::multi_agents_common::apply_mode_roster_overrides;
+use crate::tools::handlers::multi_agents_common::resolve_mode_agent_role_name;
 
 use crate::agent::exceeds_thread_spawn_depth_limit;
 use crate::agent::next_thread_spawn_depth;
@@ -37,7 +37,8 @@ impl ToolHandler for Handler {
             .as_deref()
             .map(str::trim)
             .filter(|role| !role.is_empty());
-        let role_name = resolve_multi_agent_role_name(&session, role_name)?;
+        let role_name = resolve_mode_agent_role_name(&session, turn.as_ref(), role_name)?;
+        let role_name = role_name.as_deref();
         let input_items = parse_collab_input(args.message, args.items)?;
         let prompt = input_preview(&input_items);
         let session_source = turn.session_source.clone();
@@ -48,25 +49,16 @@ impl ToolHandler for Handler {
                 "Agent depth limit reached. Solve the task yourself.".to_string(),
             ));
         }
-        session
-            .send_event(
-                &turn,
-                CollabAgentSpawnBeginEvent {
-                    call_id: call_id.clone(),
-                    sender_thread_id: session.conversation_id,
-                    prompt: prompt.clone(),
-                    model: args.model.clone().unwrap_or_default(),
-                    reasoning_effort: args.reasoning_effort.unwrap_or_default(),
-                }
-                .into(),
-            )
-            .await;
         let mut config =
             build_agent_spawn_config(&session.get_base_instructions().await, turn.as_ref())?;
-        apply_role_to_config(&mut config, role_name)
-            .await
-            .map_err(FunctionCallError::RespondToModel)?;
-        apply_multi_agent_team_overrides(&session, &mut config, role_name, args.model.as_deref())?;
+        apply_mode_agent_role_config(&session, turn.as_ref(), &mut config, role_name).await?;
+        apply_mode_roster_overrides(
+            &session,
+            turn.as_ref(),
+            &mut config,
+            role_name,
+            args.model.as_deref(),
+        )?;
         apply_requested_spawn_agent_model_overrides(
             &session,
             turn.as_ref(),
@@ -77,6 +69,21 @@ impl ToolHandler for Handler {
         .await?;
         apply_spawn_agent_runtime_overrides(&mut config, turn.as_ref())?;
         apply_spawn_agent_overrides(&mut config, child_depth);
+        let effective_model = config.model.clone().unwrap_or_default();
+        let effective_reasoning_effort = config.model_reasoning_effort.unwrap_or_default();
+        session
+            .send_event(
+                &turn,
+                CollabAgentSpawnBeginEvent {
+                    call_id: call_id.clone(),
+                    sender_thread_id: session.conversation_id,
+                    prompt: prompt.clone(),
+                    model: effective_model,
+                    reasoning_effort: effective_reasoning_effort,
+                }
+                .into(),
+            )
+            .await;
 
         let result = session
             .services
@@ -152,7 +159,7 @@ impl ToolHandler for Handler {
                     model: effective_model,
                     reasoning_effort: effective_reasoning_effort,
                     status,
-                    failure_reason: result.as_ref().err().map(|err| err.to_string()),
+                    failure_reason: result.as_ref().err().map(std::string::ToString::to_string),
                 }
                 .into(),
             )

@@ -1,3 +1,4 @@
+pub mod agentic_team;
 pub mod cache;
 pub mod collaboration_mode_presets;
 pub mod manager;

@@ -26,6 +26,35 @@ use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::util::SubscriberInitExt;
 use wiremock::MockServer;
 
+#[test]
+fn manual_roster_models_are_cataloged() {
+    let presets = devnow_model_presets();
+    let models = presets
+        .iter()
+        .map(|preset| preset.model.as_str())
+        .collect::<Vec<_>>();
+
+    for expected in [
+        "gpt-5.6-sol",
+        "claude-sonnet-5",
+        "claude-opus-4-8",
+        "claude-fable-5",
+        "gpt-5.6-luna",
+    ] {
+        assert!(
+            models.contains(&expected),
+            "missing model preset `{expected}`"
+        );
+    }
+
+    let bundled: ModelsResponse = serde_json::from_str(include_str!("../../models.json"))
+        .expect("bundled models.json should deserialize");
+    assert!(
+        bundled.models.iter().any(|model| model.slug == "gpt-5.4"),
+        "missing bundled model `gpt-5.4`"
+    );
+}
+
 fn remote_model(slug: &str, display: &str, priority: i32) -> ModelInfo {
     remote_model_with_visibility(slug, display, priority, "list")
 }

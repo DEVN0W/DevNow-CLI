@@ -849,6 +849,7 @@ mod tests {
                 model: "gpt-5".to_string(),
                 reasoning_effort: ReasoningEffortConfig::High,
                 status: AgentStatus::PendingInit,
+                failure_reason: None,
             },
             Some(&SpawnRequestSummary {
                 model: "gpt-5".to_string(),
@@ -1060,6 +1061,7 @@ mod tests {
                 model: "gpt-5".to_string(),
                 reasoning_effort: ReasoningEffortConfig::High,
                 status: AgentStatus::PendingInit,
+                failure_reason: None,
             },
             Some(&SpawnRequestSummary {
                 model: "gpt-5".to_string(),
@@ -1096,6 +1098,7 @@ mod tests {
                 model: "gpt-5".to_string(),
                 reasoning_effort: ReasoningEffortConfig::Medium,
                 status: AgentStatus::PendingInit,
+                failure_reason: None,
             },
             None,
         );
@@ -1121,6 +1124,7 @@ mod tests {
                 model: "gpt-5".to_string(),
                 reasoning_effort: ReasoningEffortConfig::Medium,
                 status: AgentStatus::NotFound,
+                failure_reason: None,
             },
             None,
         );

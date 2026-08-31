@@ -3750,7 +3750,7 @@ impl ChatWidget {
             skills_all: Vec::new(),
             skills_initial_state: None,
             current_collaboration_mode,
-            active_collaboration_mask: active_collaboration_mask.clone(),
+            active_collaboration_mask,
             auth_manager,
             models_manager,
             session_telemetry,
@@ -3961,7 +3961,7 @@ impl ChatWidget {
             skills_all: Vec::new(),
             skills_initial_state: None,
             current_collaboration_mode,
-            active_collaboration_mask: active_collaboration_mask.clone(),
+            active_collaboration_mask,
             auth_manager,
             models_manager,
             session_telemetry,
@@ -4642,11 +4642,11 @@ impl ChatWidget {
                     );
                 }
             }
-            SlashCommand::Collab => {
+            SlashCommand::Mode | SlashCommand::Collab => {
                 if !self.collaboration_modes_enabled() {
                     self.add_info_message(
                         "Collaboration modes are disabled.".to_string(),
-                        Some("Enable collaboration modes to use /collab.".to_string()),
+                        Some("Enable collaboration modes to use /mode.".to_string()),
                     );
                     return;
                 }
@@ -6773,17 +6773,23 @@ impl ChatWidget {
             .or_else(|| {
                 collaboration_modes::default_mask(self.models_manager.as_ref())
                     .and_then(|mask| mask.mode)
-            });
+            })
+            .map(ModeKind::top_level_family);
         let items: Vec<SelectionItem> = presets
             .into_iter()
             .map(|mask| {
                 let name = mask.name.clone();
                 let is_current = current_kind == mask.mode;
+                let description = mask
+                    .mode
+                    .map(collaboration_modes::description)
+                    .map(str::to_string);
                 let actions: Vec<SelectionAction> = vec![Box::new(move |tx| {
                     tx.send(AppEvent::UpdateCollaborationMode(mask.clone()));
                 })];
                 SelectionItem {
                     name,
+                    description,
                     is_current,
                     actions,
                     dismiss_on_select: true,
@@ -6793,8 +6799,8 @@ impl ChatWidget {
             .collect();
 
         self.bottom_pane.show_selection_view(SelectionViewParams {
-            title: Some("Select Collaboration Mode".to_string()),
-            subtitle: Some("Pick a collaboration preset.".to_string()),
+            title: Some("Select Mode".to_string()),
+            subtitle: Some("Choose how DevNow handles your work.".to_string()),
             footer_hint: Some(standard_popup_hint_line()),
             items,
             ..Default::default()
@@ -8383,15 +8389,20 @@ impl ChatWidget {
         }
         match self.active_mode_kind() {
             ModeKind::Plan => Some(CollaborationModeIndicator::Plan),
-            ModeKind::Default
-            | ModeKind::MultiAgent
-            | ModeKind::PairProgramming
-            | ModeKind::Execute => None,
+            ModeKind::Agentic => Some(CollaborationModeIndicator::Agentic),
+            ModeKind::MultiAgent => Some(CollaborationModeIndicator::MultiAgent),
+            ModeKind::Default | ModeKind::PairProgramming | ModeKind::Execute => None,
         }
     }
 
     fn update_collaboration_mode_indicator(&mut self) {
         let indicator = self.collaboration_mode_indicator();
+        let agents = self
+            .models_manager
+            .agentic_team()
+            .map(|team| team.agents.clone())
+            .unwrap_or_default();
+        self.bottom_pane.set_agent_mentions(agents);
         self.bottom_pane.set_collaboration_mode_indicator(indicator);
     }
 

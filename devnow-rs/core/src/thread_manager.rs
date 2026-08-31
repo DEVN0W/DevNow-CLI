@@ -14,6 +14,7 @@ use crate::error::CodexErr;
 use crate::error::Result as CodexResult;
 use crate::file_watcher::FileWatcher;
 use crate::mcp::McpManager;
+use crate::models_manager::agentic_team::load_agentic_team;
 use crate::models_manager::collaboration_mode_presets::CollaborationModesConfig;
 use crate::models_manager::manager::ModelsManager;
 use crate::models_manager::multi_agent_team::load_multi_agent_team;
@@ -239,25 +240,28 @@ impl ThreadManager {
             restriction_product,
         ));
         let skills_watcher = build_skills_watcher(Arc::clone(&skills_manager));
+        if collaboration_modes_config.agentic_team.is_none() {
+            let agentic_roster_path = config.codex_home.join("agentic.toml");
+            match load_agentic_team(&config.codex_home) {
+                Ok(team) => collaboration_modes_config.agentic_team = team,
+                Err(err) => {
+                    warn!(
+                        "failed to load manual agent roster from {}: {err}",
+                        agentic_roster_path.display()
+                    );
+                }
+            }
+        }
         if collaboration_modes_config.multi_agent_team.is_none() {
             let multi_agent_roster_path = config.codex_home.join("multi_agent.toml");
-            if multi_agent_roster_path.exists() {
-                match load_multi_agent_team(&config.codex_home) {
-                    Ok(team) => {
-                        collaboration_modes_config.multi_agent_team = team;
-                    }
-                    Err(err) => {
-                        warn!(
-                            "failed to load multi-agent team configuration from {}: {err}",
-                            multi_agent_roster_path.display()
-                        );
-                    }
+            match load_multi_agent_team(&config.codex_home) {
+                Ok(team) => collaboration_modes_config.multi_agent_team = team,
+                Err(err) => {
+                    warn!(
+                        "failed to load multi-agent team configuration from {}: {err}",
+                        multi_agent_roster_path.display()
+                    );
                 }
-            } else {
-                warn!(
-                    "no multi-agent roster found at {}",
-                    multi_agent_roster_path.display()
-                );
             }
         }
         Self {

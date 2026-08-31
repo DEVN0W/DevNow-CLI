@@ -15,6 +15,7 @@ use crate::config::types::NotificationMethod;
 use crate::config::types::Notifications;
 use crate::config::types::ToolSuggestDiscoverableType;
 use crate::config_loader::RequirementSource;
+use crate::model_provider_info::WireApi;
 use assert_matches::assert_matches;
 use codex_config::CONFIG_TOML_FILE;
 use codex_features::Feature;

@@ -13,6 +13,7 @@ codex_rust_crate(
         allow_empty = True,
     ) + [
         "//devnow-rs/core:templates/collaboration_mode/default.md",
+        "//devnow-rs/core:templates/collaboration_mode/agentic.md",
         "//devnow-rs/core:templates/collaboration_mode/plan.md",
     ],
     test_data_extra = glob(["src/**/snapshots/**"]) + ["//devnow-rs/core:model_availability_nux_fixtures"],

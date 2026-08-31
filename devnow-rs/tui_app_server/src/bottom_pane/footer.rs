@@ -89,6 +89,8 @@ pub(crate) struct FooterProps {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum CollaborationModeIndicator {
     Plan,
+    Agentic,
+    MultiAgent,
     #[allow(dead_code)] // Hidden by current mode filtering; kept for future UI re-enablement.
     PairProgramming,
     #[allow(dead_code)] // Hidden by current mode filtering; kept for future UI re-enablement.
@@ -107,6 +109,10 @@ impl CollaborationModeIndicator {
         };
         match self {
             CollaborationModeIndicator::Plan => format!("Plan mode{suffix}"),
+            CollaborationModeIndicator::Agentic => format!("Multi-Agent mode{suffix}"),
+            CollaborationModeIndicator::MultiAgent => {
+                format!("Multi-Agent Strategic mode{suffix}")
+            }
             CollaborationModeIndicator::PairProgramming => {
                 format!("Pair Programming mode{suffix}")
             }
@@ -118,6 +124,8 @@ impl CollaborationModeIndicator {
         let label = self.label(show_cycle_hint);
         match self {
             CollaborationModeIndicator::Plan => Span::from(label).magenta(),
+            CollaborationModeIndicator::Agentic => Span::from(label).cyan(),
+            CollaborationModeIndicator::MultiAgent => Span::from(label).yellow(),
             CollaborationModeIndicator::PairProgramming => Span::from(label).cyan(),
             CollaborationModeIndicator::Execute => Span::from(label).dim(),
         }
@@ -1738,5 +1746,17 @@ mod tests {
             .key;
 
         assert_eq!(actual_key, expected_key);
+    }
+
+    #[test]
+    fn multi_agent_mode_indicators_have_distinct_labels() {
+        assert_eq!(
+            CollaborationModeIndicator::Agentic.label(false),
+            "Multi-Agent mode"
+        );
+        assert_eq!(
+            CollaborationModeIndicator::MultiAgent.label(false),
+            "Multi-Agent Strategic mode"
+        );
     }
 }

@@ -19,6 +19,16 @@ pub(crate) fn agent_status_from_event(msg: &EventMsg) -> Option<AgentStatus> {
     }
 }
 
+/// Keep a terminal error when the turn subsequently emits an empty completion.
+pub(crate) fn merge_agent_status(current: &AgentStatus, next: AgentStatus) -> AgentStatus {
+    match (current, next) {
+        (AgentStatus::Errored(message), AgentStatus::Completed(None)) => {
+            AgentStatus::Errored(message.clone())
+        }
+        (_, next) => next,
+    }
+}
+
 pub(crate) fn is_final(status: &AgentStatus) -> bool {
     !matches!(
         status,

@@ -425,7 +425,9 @@ impl GatewayLogCollector {
 }
 
 fn tail_excerpt(tail: &StdMutex<GatewayLogTail>) -> Option<String> {
-    let guard = tail.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let guard = tail
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     guard.excerpt()
 }
 
@@ -445,7 +447,9 @@ async fn drain_gateway_stderr<R>(
                     continue;
                 }
                 forward_gateway_log_line(&sanitized);
-                let mut guard = tail.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                let mut guard = tail
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner);
                 guard.push(sanitized);
             }
             // `next_line` returns the trailing partial line (if any) before
@@ -637,7 +641,7 @@ mod tests {
     impl ChunkedReader {
         fn new(chunks: Vec<&[u8]>) -> Self {
             Self {
-                chunks: chunks.into_iter().map(|c| c.to_vec()).collect(),
+                chunks: chunks.into_iter().map(<[u8]>::to_vec).collect(),
             }
         }
     }
@@ -663,7 +667,9 @@ mod tests {
         if collector.task.await.is_err() {
             panic!("collector task should not panic");
         }
-        let guard = tail.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let guard = tail
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         guard.lines.iter().cloned().collect()
     }
 
@@ -901,17 +907,16 @@ mod tests {
     }
 
     fn find_python_executable() -> Option<&'static str> {
-        for candidate in ["python3", "python"] {
-            if std::process::Command::new(candidate)
-                .arg("--version")
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .status()
-                .is_ok_and(|status| status.success())
-            {
-                return Some(candidate);
-            }
-        }
-        None
+        ["python3", "python"]
+            .into_iter()
+            .find(|&candidate| {
+                std::process::Command::new(candidate)
+                    .arg("--version")
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .is_ok_and(|status| status.success())
+            })
+            .map(|v| v as _)
     }
 }

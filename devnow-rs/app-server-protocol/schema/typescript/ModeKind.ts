@@ -5,4 +5,4 @@
 /**
  * Initial collaboration mode to use when the TUI starts.
  */
-export type ModeKind = "plan" | "default" | "multi_agent";
+export type ModeKind = "plan" | "default" | "agentic" | "multi_agent";

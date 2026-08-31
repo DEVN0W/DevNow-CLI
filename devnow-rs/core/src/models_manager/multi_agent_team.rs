@@ -446,7 +446,7 @@ fn normalize_required_label(field_name: &str, value: String) -> std::io::Result<
 }
 
 #[cfg(test)]
-mod tests {
+mod role_resolution_tests {
     use super::*;
 
     #[test]
@@ -1116,6 +1116,7 @@ instructions = "Own the implementation."
     fn agent_for_role_matches_name_or_role() {
         let team = MultiAgentTeamConfig {
             team_name: None,
+            default_agent: None,
             routing: MultiAgentRoutingConfig::default(),
             agents: vec![MultiAgentAgentConfig {
                 name: "critic".to_string(),

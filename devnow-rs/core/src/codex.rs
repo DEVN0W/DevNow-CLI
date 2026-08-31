@@ -12,6 +12,7 @@ use crate::SandboxState;
 use crate::agent::AgentControl;
 use crate::agent::AgentStatus;
 use crate::agent::agent_status_from_event;
+use crate::agent::merge_agent_status;
 use crate::apps::render_apps_section;
 use crate::auth_env_telemetry::collect_auth_env_telemetry;
 use crate::commit_attribution::commit_message_trailer_instruction;
@@ -346,6 +347,7 @@ use crate::tools::network_approval::build_network_policy_decider;
 use crate::tools::parallel::ToolCallRuntime;
 use crate::tools::router::ToolRouterParams;
 use crate::tools::sandboxing::ApprovalStore;
+use crate::tools::spec::DelegationPolicy;
 use crate::tools::spec::ToolsConfig;
 use crate::tools::spec::ToolsConfigParams;
 use crate::turn_diff_tracker::TurnDiffTracker;
@@ -938,6 +940,7 @@ impl TurnContext {
             sandbox_policy: self.sandbox_policy.get(),
             windows_sandbox_level: self.windows_sandbox_level,
         })
+        .with_delegation_policy(DelegationPolicy::from(collaboration_mode.mode))
         .with_unified_exec_shell_mode(self.tools_config.unified_exec_shell_mode.clone())
         .with_web_search_config(self.tools_config.web_search_config.clone())
         .with_allow_login_shell(self.tools_config.allow_login_shell)
@@ -1313,8 +1316,17 @@ impl Session {
             );
         }
         per_turn_config.features = config.features.clone();
-        if session_configuration.collaboration_mode.mode == ModeKind::MultiAgent {
+        if matches!(
+            session_configuration.collaboration_mode.mode,
+            ModeKind::Agentic | ModeKind::MultiAgent
+        ) {
             let _ = per_turn_config.features.enable(Feature::Collab);
+        }
+        if session_configuration
+            .collaboration_mode
+            .mode
+            .automatically_orchestrates()
+        {
             let _ = per_turn_config.features.enable(Feature::MultiAgentV2);
         }
         per_turn_config
@@ -1396,6 +1408,9 @@ impl Session {
             sandbox_policy: session_configuration.sandbox_policy.get(),
             windows_sandbox_level: session_configuration.windows_sandbox_level,
         })
+        .with_delegation_policy(DelegationPolicy::from(
+            session_configuration.collaboration_mode.mode,
+        ))
         .with_unified_exec_shell_mode_for_session(
             user_shell,
             shell_zsh_path,
@@ -2688,7 +2703,9 @@ impl Session {
     async fn deliver_event_raw(&self, event: Event) {
         // Record the last known agent status.
         if let Some(status) = agent_status_from_event(&event.msg) {
-            self.agent_status.send_replace(status);
+            let current = self.agent_status.borrow().clone();
+            self.agent_status
+                .send_replace(merge_agent_status(&current, status));
         }
         self.deliver_transient_event_raw(event).await;
     }
@@ -4710,9 +4727,52 @@ mod handlers {
             Ok(_) => current_context.session_telemetry.user_prompt(&items),
             Err(SteerInputError::NoActiveTurn(items)) => {
                 current_context.session_telemetry.user_prompt(&items);
+                let mode = current_context.collaboration_mode.mode;
+                let missing_roster = if mode.uses_manual_roster()
+                    && sess.services.models_manager.agentic_team().is_none()
+                {
+                    Some(("Multi-Agent", "agentic.toml"))
+                } else if mode.uses_strategic_roster()
+                    && sess.services.models_manager.multi_agent_team().is_none()
+                {
+                    Some(("Multi-Agent Strategic", "multi_agent.toml"))
+                } else {
+                    None
+                };
+                if let Some((mode_name, file_name)) = missing_roster {
+                    sess.send_event_raw(Event {
+                        id: sub_id,
+                        msg: EventMsg::Error(ErrorEvent {
+                            message: format!(
+                                "{mode_name} mode requires a valid roster at {}",
+                                current_context.config.codex_home.join(file_name).display()
+                            ),
+                            codex_error_info: Some(CodexErrorInfo::BadRequest),
+                        }),
+                    })
+                    .await;
+                    return;
+                }
                 sess.refresh_mcp_servers_if_requested(&current_context)
                     .await;
-                if current_context.collaboration_mode.mode == ModeKind::MultiAgent {
+                let explicit_delegation = if mode.uses_manual_roster() {
+                    sess.services
+                        .models_manager
+                        .agentic_team()
+                        .and_then(|team| {
+                            crate::tasks::parse_explicit_agent_delegation(&items, team)
+                        })
+                } else {
+                    None
+                };
+                if let Some(delegation) = explicit_delegation {
+                    sess.spawn_task(
+                        Arc::clone(&current_context),
+                        Vec::new(),
+                        crate::tasks::ExplicitAgentDelegationTask::new(delegation),
+                    )
+                    .await;
+                } else if mode.automatically_orchestrates() {
                     sess.spawn_task(
                         Arc::clone(&current_context),
                         items,
@@ -5459,6 +5519,9 @@ async fn spawn_review_thread(
         sandbox_policy: parent_turn_context.sandbox_policy.get(),
         windows_sandbox_level: parent_turn_context.windows_sandbox_level,
     })
+    .with_delegation_policy(DelegationPolicy::from(
+        parent_turn_context.collaboration_mode.mode,
+    ))
     .with_unified_exec_shell_mode_for_session(
         sess.services.user_shell.as_ref(),
         sess.services.shell_zsh_path.as_ref(),

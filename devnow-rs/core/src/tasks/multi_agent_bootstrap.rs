@@ -31,6 +31,8 @@ use crate::agent::status::is_final;
 use crate::codex::Session;
 use crate::codex::TurnContext;
 use crate::connectors::sanitize_name;
+#[cfg(test)]
+use crate::models_manager::collaboration_mode_presets::default_multi_agent_team_instructions;
 use crate::models_manager::multi_agent_team::MultiAgentAgentConfig;
 use crate::models_manager::multi_agent_team::MultiAgentTeamConfig;
 use crate::state::TaskKind;
@@ -41,6 +43,9 @@ use crate::tools::handlers::multi_agents_common::build_agent_spawn_config;
 use crate::tools::handlers::multi_agents_common::input_preview;
 use crate::tools::handlers::multi_agents_common::thread_spawn_source;
 use uuid::Uuid;
+
+use super::workspace_target::apply_requested_workspace;
+use super::workspace_target::infer_workspace_path;
 
 #[derive(Clone, Copy, Default)]
 pub(crate) struct MultiAgentBootstrapTask;
@@ -113,7 +118,8 @@ impl SessionTask for MultiAgentBootstrapTask {
         }
 
         let base_instructions = session_handle.get_base_instructions().await;
-        let base_spawn_config = match build_agent_spawn_config(&base_instructions, ctx.as_ref()) {
+        let mut base_spawn_config = match build_agent_spawn_config(&base_instructions, ctx.as_ref())
+        {
             Ok(config) => config,
             Err(err) => {
                 warn!(
@@ -125,8 +131,8 @@ impl SessionTask for MultiAgentBootstrapTask {
             }
         };
         let prompt = stage_spawn_preview(&input);
-        let locked_workspace_path =
-            infer_locked_workspace_path(&input, &ctx.cwd.display().to_string());
+        let locked_workspace_path = infer_workspace_path(&input, &ctx.cwd).display().to_string();
+        apply_requested_workspace(&mut base_spawn_config, &input);
         let reasoning_effort = ctx.reasoning_effort.unwrap_or_default();
         let Some(initial_agent) = ordered_agents.first().cloned() else {
             return None;
@@ -258,9 +264,7 @@ impl SessionTask for MultiAgentBootstrapTask {
             )
             .await
             else {
-                return Some(format!(
-                    "Architect design approval was cancelled before the multi-agent flow could continue."
-                ));
+                return Some("Architect design approval was cancelled before the multi-agent flow could continue.".to_string());
             };
 
             if !architect_approved {
@@ -268,9 +272,7 @@ impl SessionTask for MultiAgentBootstrapTask {
                     "architect {} [{}] was not approved; pausing multi-agent flow",
                     initial_agent.name, initial_agent.role
                 );
-                return Some(format!(
-                    "Architect design was not approved yet. The flow is paused until the architect design is revised and approved."
-                ));
+                return Some("Architect design was not approved yet. The flow is paused until the architect design is revised and approved.".to_string());
             }
 
             let Some(next_agent) = team
@@ -470,7 +472,7 @@ async fn run_multi_agent_chain(
                         current_agent.name.clone(),
                         current_agent.role.clone(),
                         status.clone(),
-                        Some(next_agent.name.clone()),
+                        Some(next_agent.name),
                     ));
                     return Ok(render_production_summary(
                         stage_history.as_slice(),
@@ -1541,10 +1543,10 @@ fn normalize_review_summary(summary: &str, passed: bool) -> String {
 fn extract_review_grade(text: &str) -> Option<u8> {
     for line in text.lines() {
         let normalized = line.trim().to_ascii_lowercase();
-        if normalized.contains("grade") || normalized.contains("score") {
-            if let Some(grade) = extract_first_grade_value(line) {
-                return Some(grade);
-            }
+        if (normalized.contains("grade") || normalized.contains("score"))
+            && let Some(grade) = extract_first_grade_value(line)
+        {
+            return Some(grade);
         }
     }
     None
@@ -1576,87 +1578,6 @@ fn extract_first_grade_value(text: &str) -> Option<u8> {
     }
 
     None
-}
-
-fn infer_locked_workspace_path(root_input: &[UserInput], fallback: &str) -> String {
-    let mut fallback_candidate = fallback.to_string();
-    let mut preferred_candidate: Option<String> = None;
-
-    for candidate in root_input.iter().flat_map(user_input_paths) {
-        if preferred_candidate.is_none() && looks_like_workspace_target(&candidate) {
-            preferred_candidate = Some(candidate.clone());
-        }
-        if fallback_candidate.is_empty() {
-            fallback_candidate = candidate.clone();
-        }
-    }
-
-    preferred_candidate
-        .or_else(|| root_input.iter().flat_map(user_input_paths).next())
-        .unwrap_or(fallback_candidate)
-}
-
-fn user_input_paths(input: &UserInput) -> Vec<String> {
-    match input {
-        UserInput::Text { text, .. } => extract_absolute_paths(text),
-        UserInput::LocalImage { path } => vec![path.display().to_string()],
-        UserInput::Skill { path, .. } => vec![path.display().to_string()],
-        UserInput::Mention { path, .. } => vec![path.clone()],
-        UserInput::Image { .. } => Vec::new(),
-        _ => Vec::new(),
-    }
-}
-
-fn extract_absolute_paths(text: &str) -> Vec<String> {
-    let mut paths = Vec::new();
-    for token in text.split_whitespace() {
-        if let Some(candidate) = normalize_path_candidate(token) {
-            paths.push(candidate);
-        }
-    }
-    paths
-}
-
-fn normalize_path_candidate(token: &str) -> Option<String> {
-    let candidate = token.trim_matches(|ch: char| {
-        matches!(
-            ch,
-            '`' | '"'
-                | '\''
-                | ','
-                | ';'
-                | ':'
-                | '.'
-                | ')'
-                | '('
-                | ']'
-                | '['
-                | '{'
-                | '}'
-                | '<'
-                | '>'
-        )
-    });
-    if candidate.is_empty() {
-        return None;
-    }
-
-    let is_unix_absolute = candidate.starts_with('/');
-    let is_windows_absolute = candidate.len() >= 3
-        && candidate.as_bytes()[1] == b':'
-        && matches!(candidate.as_bytes()[2], b'\\' | b'/')
-        && candidate.as_bytes()[0].is_ascii_alphabetic();
-
-    if is_unix_absolute || is_windows_absolute {
-        Some(candidate.to_string())
-    } else {
-        None
-    }
-}
-
-fn looks_like_workspace_target(candidate: &str) -> bool {
-    let normalized = candidate.replace('\\', "/").to_ascii_lowercase();
-    normalized.contains("/poc/") || normalized.contains("c:/poc/")
 }
 
 fn stage_prompt_prefix(agent: &MultiAgentAgentConfig) -> Option<String> {
@@ -1820,7 +1741,7 @@ async fn spawn_multi_agent_stage(
                 model: agent.model.clone(),
                 reasoning_effort,
                 status,
-                failure_reason: result.as_ref().err().map(|err| err.to_string()),
+                failure_reason: result.as_ref().err().map(std::string::ToString::to_string),
             }),
         )
         .await;
@@ -2308,6 +2229,7 @@ mod tests {
             model: "gpt-5.4".to_string(),
             model_provider: None,
             weight: 50,
+            passing_grade: None,
             next_on_pass: None,
             next_on_fail: None,
             instructions: "Use Python for implementation.".to_string(),
@@ -2341,6 +2263,7 @@ mod tests {
             model: "gpt-5.4".to_string(),
             model_provider: None,
             weight: 50,
+            passing_grade: None,
             next_on_pass: Some("critic".to_string()),
             next_on_fail: Some("developer".to_string()),
             instructions: String::new(),
@@ -2565,32 +2488,6 @@ mod tests {
             normalize_review_summary("summary: good\nstatus: pass\nnext: developer", false);
         assert!(failed.contains("status: fail"));
         assert!(!failed.contains("status: pass"));
-    }
-
-    #[test]
-    fn infer_locked_workspace_path_prefers_user_target_folder() {
-        let input = vec![UserInput::Text {
-            text: "Create the app in `/mnt/c/POC/test-game-1` and keep downstream agents on that path.".to_string(),
-            text_elements: Vec::new(),
-        }];
-
-        assert_eq!(
-            infer_locked_workspace_path(&input, "C:/fallback"),
-            "/mnt/c/POC/test-game-1".to_string()
-        );
-    }
-
-    #[test]
-    fn infer_locked_workspace_path_falls_back_to_cwd_when_no_path_is_present() {
-        let input = vec![UserInput::Text {
-            text: "Hello world, please help".to_string(),
-            text_elements: Vec::new(),
-        }];
-
-        assert_eq!(
-            infer_locked_workspace_path(&input, "C:/fallback"),
-            "C:/fallback".to_string()
-        );
     }
 
     #[test]

@@ -1,3 +1,4 @@
+use crate::models_manager::agentic_team::AgenticTeamConfig;
 use crate::models_manager::multi_agent_team::MultiAgentTeamConfig;
 use codex_protocol::config_types::CollaborationModeMask;
 use codex_protocol::config_types::ModeKind;
@@ -7,11 +8,14 @@ use codex_protocol::openai_models::ReasoningEffort;
 const COLLABORATION_MODE_PLAN: &str = include_str!("../../templates/collaboration_mode/plan.md");
 const COLLABORATION_MODE_DEFAULT: &str =
     include_str!("../../templates/collaboration_mode/default.md");
+const COLLABORATION_MODE_AGENTIC: &str =
+    include_str!("../../templates/collaboration_mode/agentic.md");
 const COLLABORATION_MODE_MULTI_AGENT: &str =
     include_str!("../../templates/collaboration_mode/multi_agent.md");
 const KNOWN_MODE_NAMES_PLACEHOLDER: &str = "{{KNOWN_MODE_NAMES}}";
 const REQUEST_USER_INPUT_AVAILABILITY_PLACEHOLDER: &str = "{{REQUEST_USER_INPUT_AVAILABILITY}}";
 const ASKING_QUESTIONS_GUIDANCE_PLACEHOLDER: &str = "{{ASKING_QUESTIONS_GUIDANCE}}";
+const AGENTIC_TEAM_PLACEHOLDER: &str = "{{AGENTIC_TEAM}}";
 const MULTI_AGENT_TEAM_PLACEHOLDER: &str = "{{MULTI_AGENT_TEAM}}";
 
 /// Stores feature flags that control collaboration-mode behavior.
@@ -23,7 +27,9 @@ const MULTI_AGENT_TEAM_PLACEHOLDER: &str = "{{MULTI_AGENT_TEAM}}";
 pub struct CollaborationModesConfig {
     /// Enables `request_user_input` availability in Default mode.
     pub default_mode_request_user_input: bool,
-    /// Optional externally configured multi-agent roster used by Multi Agent mode.
+    /// Optional externally configured roster used by manual Multi-Agent mode.
+    pub agentic_team: Option<AgenticTeamConfig>,
+    /// Optional externally configured roster used by Multi-Agent Strategic mode.
     pub multi_agent_team: Option<MultiAgentTeamConfig>,
 }
 
@@ -33,8 +39,22 @@ pub(crate) fn builtin_collaboration_mode_presets(
     vec![
         plan_preset(),
         default_preset(collaboration_modes_config.clone()),
+        agentic_preset(collaboration_modes_config.agentic_team.as_ref()),
         multi_agent_preset(collaboration_modes_config.multi_agent_team.as_ref()),
     ]
+}
+
+fn agentic_preset(team: Option<&AgenticTeamConfig>) -> CollaborationModeMask {
+    CollaborationModeMask {
+        name: ModeKind::Agentic.display_name().to_string(),
+        mode: Some(ModeKind::Agentic),
+        model: None,
+        reasoning_effort: None,
+        developer_instructions: Some(Some(
+            COLLABORATION_MODE_AGENTIC
+                .replace(AGENTIC_TEAM_PLACEHOLDER, &agentic_team_instructions(team)),
+        )),
+    }
 }
 
 fn plan_preset() -> CollaborationModeMask {
@@ -125,6 +145,38 @@ fn asking_questions_guidance_message(default_mode_request_user_input: bool) -> S
     }
 }
 
+fn agentic_team_instructions(team: Option<&AgenticTeamConfig>) -> String {
+    let Some(team) = team else {
+        return "No manual agent roster is loaded. Configure `CODEX_HOME/agentic.toml` before using Multi-Agent mode.".to_string();
+    };
+
+    let mut output = String::from("## Manual agent roster\n\n");
+    if let Some(team_name) = &team.team_name {
+        output.push_str(&format!("Team name: `{team_name}`\n\n"));
+    }
+    if let Some(default_agent) = &team.default_agent {
+        output.push_str(&format!("Default agent: `{default_agent}`\n\n"));
+    }
+    for agent in &team.agents {
+        let provider = agent
+            .model_provider
+            .as_ref()
+            .map(|provider| format!(", provider: `{provider}`"))
+            .unwrap_or_default();
+        output.push_str(&format!(
+            "- `{}` - role: `{}`, model: `{}`{}\n",
+            agent.name, agent.role, agent.model, provider
+        ));
+        output.push_str("  - instructions:\n");
+        for line in agent.instructions.lines() {
+            output.push_str("    ");
+            output.push_str(line);
+            output.push('\n');
+        }
+    }
+    output
+}
+
 fn multi_agent_team_instructions(team: Option<&MultiAgentTeamConfig>) -> String {
     match team {
         Some(team) => render_configured_multi_agent_team(team),
@@ -186,7 +238,7 @@ fn render_configured_multi_agent_team(team: &MultiAgentTeamConfig) -> String {
     output
 }
 
-fn default_multi_agent_team_instructions() -> String {
+pub(crate) fn default_multi_agent_team_instructions() -> String {
     r#"## Role guidance
 
 - Architect: design only. Produce the architecture, boundaries, dependencies, and risks before implementation begins.

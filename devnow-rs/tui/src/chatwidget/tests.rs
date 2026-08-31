@@ -2250,6 +2250,7 @@ async fn collab_spawn_end_shows_requested_model_and_effort() {
             model: "gpt-5".to_string(),
             reasoning_effort: ReasoningEffortConfig::High,
             status: AgentStatus::PendingInit,
+            failure_reason: None,
         }),
     });
 
@@ -9182,6 +9183,33 @@ async fn reasoning_popup_escape_returns_to_model_popup() {
     let after_escape = render_bottom_popup(&chat, 80);
     assert!(after_escape.contains("Select Model"));
     assert!(!after_escape.contains("Select Reasoning Level"));
+}
+
+#[tokio::test]
+async fn mode_and_collab_commands_open_the_same_three_mode_popup() {
+    let (mut chat, _rx, _op_rx) = make_chatwidget_manual(None).await;
+    chat.models_manager = Arc::new(ModelsManager::new(
+        chat.config.codex_home.clone(),
+        chat.auth_manager.clone(),
+        None,
+        CollaborationModesConfig {
+            agentic_team: Some(
+                codex_core::models_manager::agentic_team::AgenticTeamConfig::default(),
+            ),
+            multi_agent_team: Some(
+                codex_core::models_manager::multi_agent_team::MultiAgentTeamConfig::default(),
+            ),
+            ..Default::default()
+        },
+    ));
+
+    chat.dispatch_command(SlashCommand::Mode);
+    let mode_popup = render_bottom_popup(&chat, 80);
+    assert_snapshot!("mode_selection_popup", mode_popup);
+
+    chat.handle_key_event(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
+    chat.dispatch_command(SlashCommand::Collab);
+    assert_eq!(mode_popup, render_bottom_popup(&chat, 80));
 }
 
 #[tokio::test]

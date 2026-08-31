@@ -1,0 +1,49 @@
+# Copy this file to `CODEX_HOME/agentic.toml` to enable Manual Multi-Agent mode.
+# This file defines only the available roster. Provider URLs and credentials stay
+# in `config.toml` and environment variables. In Multi-Agent mode, use a leading
+# `@agent-name` prompt to explicitly dispatch one of these agents.
+
+team_name = "DevNow Manual Agent Team"
+default_agent = "developer"
+
+[[agents]]
+name = "principal-architect"
+role = "principal-architect"
+model = "gpt-5.6-sol"
+model_provider = "azure-openai"
+instructions = "Own principal architecture, system boundaries, major tradeoffs, and technical risk."
+
+[[agents]]
+name = "tech-lead"
+role = "tech-lead"
+model = "claude-sonnet-5"
+model_provider = "claude"
+instructions = "Lead delivery planning, coordinate implementation, and review integration decisions."
+
+[[agents]]
+name = "technical-architect"
+role = "technical-architect"
+model = "claude-opus-4-8"
+model_provider = "claude"
+instructions = "Produce detailed technical architecture, interfaces, data flows, and implementation constraints."
+
+[[agents]]
+name = "sr-technical-architect"
+role = "sr-technical-architect"
+model = "claude-fable-5"
+model_provider = "claude"
+instructions = "Own senior technical architecture review, long-term maintainability, and cross-system consistency."
+
+[[agents]]
+name = "sr-developer"
+role = "sr-developer"
+model = "gpt-5.6-luna"
+model_provider = "azure-openai"
+instructions = "Implement complex bounded tasks, resolve difficult defects, and review integration quality."
+
+[[agents]]
+name = "developer"
+role = "developer"
+model = "gpt-5.4"
+model_provider = "azure-openai"
+instructions = "Implement assigned tasks, update tests, and report changed files and validation."

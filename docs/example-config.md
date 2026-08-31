@@ -36,12 +36,15 @@ To switch later, just add another entry under `[model_providers.*]` and update
 For Foundry, use the project endpoint plus the provider `extra_body` shown
 above so Codex can add the `agent_reference` payload on that provider only.
 
-For the dynamic multi-agent roster, copy `docs/multi-agent.sample.toml` to `CODEX_HOME/multi_agent.toml`.
-`CODEX_HOME/multi_agent.toml` is the active file Codex reads at runtime; keep the sample as your editable template.
-To add or remove agents, edit that TOML file directly.
-Each `[[agents]]` entry can set `model_provider` to a provider id you define in `config.toml`.
-That lets one roster use different backends, such as OpenAI, Azure OpenAI, or another compatible URL, per agent.
-If you want Azure for every agent, just set each `model_provider = "azure-openai"`.
-You can also control per-agent routing with fields like `next_on_pass` and `next_on_fail`.
-The built-in runtime roles `quality ai`, `security ai`, and `execution tester` are available without extra setup so the roster can use them immediately.
-At runtime, you only need to give the task once; the agent instructions handle the review, security, validation, summary, forwarding, install requests, and fix loop automatically.
+For Manual Multi-Agent mode, copy `docs/agentic.sample.toml` to
+`CODEX_HOME/agentic.toml`. Its `developer` entry is the default agent and uses
+`gpt-5.4`. GPT entries reference the existing `openai` provider and Claude
+entries reference the existing `claude` provider. Keep URLs and API keys in
+`config.toml` or environment variables, never in `agentic.toml`. Manual agents
+remain inactive until the root AI explicitly calls an agent tool.
+
+For Multi-Agent Strategic mode, copy `docs/multi-agent.sample.toml` to
+`CODEX_HOME/multi_agent.toml`. This file includes automatic routing fields such
+as `next_on_pass` and `next_on_fail`; those fields are intentionally rejected in
+the manual roster. Each `[[agents]]` entry can reference a provider id from
+`config.toml`, including a custom Azure-compatible provider.

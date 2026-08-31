@@ -3,6 +3,7 @@ use crate::CodexAuth;
 use crate::CodexThread;
 use crate::ThreadManager;
 use crate::agent::agent_status_from_event;
+use crate::agent::merge_agent_status;
 use crate::config::AgentRoleConfig;
 use crate::config::Config;
 use crate::config::ConfigBuilder;
@@ -263,6 +264,17 @@ async fn on_event_updates_status_from_error() {
 
     let expected = AgentStatus::Errored("boom".to_string());
     assert_eq!(status, Some(expected));
+}
+
+#[test]
+fn empty_turn_completion_does_not_overwrite_agent_error() {
+    let current = AgentStatus::Errored("no healthy upstream".to_string());
+    let next = AgentStatus::Completed(None);
+
+    assert_eq!(
+        merge_agent_status(&current, next),
+        AgentStatus::Errored("no healthy upstream".to_string())
+    );
 }
 
 #[tokio::test]
@@ -1322,6 +1334,42 @@ async fn spawn_thread_subagent_gets_random_nickname_in_session_source() {
     assert_eq!(depth, 1);
     assert!(agent_nickname.is_some());
     assert_eq!(agent_role, Some("explorer".to_string()));
+}
+
+#[tokio::test]
+async fn spawn_thread_subagent_preserves_preferred_nickname() {
+    let harness = AgentControlHarness::new().await;
+    let (parent_thread_id, _parent_thread) = harness.start_thread().await;
+
+    let child_thread_id = harness
+        .control
+        .spawn_agent(
+            harness.config.clone(),
+            text_input("hello child"),
+            Some(SessionSource::SubAgent(SubAgentSource::ThreadSpawn {
+                parent_thread_id,
+                depth: 1,
+                agent_path: None,
+                agent_nickname: Some("sr-developer".to_string()),
+                agent_role: Some("sr-developer".to_string()),
+            })),
+        )
+        .await
+        .expect("child spawn should succeed");
+
+    let child_thread = harness
+        .manager
+        .get_thread(child_thread_id)
+        .await
+        .expect("child thread should be registered");
+    let snapshot = child_thread.config_snapshot().await;
+
+    let SessionSource::SubAgent(SubAgentSource::ThreadSpawn { agent_nickname, .. }) =
+        snapshot.session_source
+    else {
+        panic!("expected thread-spawn sub-agent source");
+    };
+    assert_eq!(agent_nickname, Some("sr-developer".to_string()));
 }
 
 #[tokio::test]

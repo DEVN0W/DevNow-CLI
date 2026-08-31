@@ -1,10 +1,13 @@
 mod compact;
+mod explicit_agent_delegation;
+mod explicit_agent_history;
 mod ghost_snapshot;
 mod multi_agent_bootstrap;
 mod regular;
 mod review;
 mod undo;
 mod user_shell;
+mod workspace_target;
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -50,6 +53,8 @@ use codex_protocol::user_input::UserInput;
 
 use codex_features::Feature;
 pub(crate) use compact::CompactTask;
+pub(crate) use explicit_agent_delegation::ExplicitAgentDelegationTask;
+pub(crate) use explicit_agent_delegation::parse_explicit_agent_delegation;
 pub(crate) use ghost_snapshot::GhostSnapshotTask;
 pub(crate) use multi_agent_bootstrap::MultiAgentBootstrapTask;
 pub(crate) use regular::RegularTask;

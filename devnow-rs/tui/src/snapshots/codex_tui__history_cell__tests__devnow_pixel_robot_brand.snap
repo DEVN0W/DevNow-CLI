@@ -1,0 +1,10 @@
+---
+source: tui/src/history_cell.rs
+assertion_line: 3647
+expression: rendered
+---
+   ▄█▄     DEVNOW
+ ▄█████▄   D E V N O W
+██ ▀ ▀ ██  TERMINAL AI AGENT
+ ▀█████▀ 
+──────────────────────────────────────────────────

@@ -4,7 +4,7 @@ This component is vendored from `llm-rosetta` and retains its upstream MIT
 license in `LICENSE`.
 
 - Upstream project: `Oaklight/llm-rosetta`
-- Vendored source directory: `llm-rosetta-master`
+- Vendored directly into: `third_party/devnow-gateway`
 - DevNow runtime name: `devnow-gateway`
 - Internal Python import namespace: `llm_rosetta` (intentionally retained to
   minimize converter churn)

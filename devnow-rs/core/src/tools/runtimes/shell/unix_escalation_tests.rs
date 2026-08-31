@@ -332,6 +332,7 @@ fn evaluate_intercepted_exec_policy_uses_wrapper_command_when_shell_wrapper_pars
             sandbox_policy: &SandboxPolicy::new_read_only_policy(),
             file_system_sandbox_policy: &read_only_file_system_sandbox_policy(),
             sandbox_permissions: SandboxPermissions::UseDefault,
+            cwd: std::path::Path::new("/"),
             enable_shell_wrapper_parsing: enable_intercepted_exec_policy_shell_wrapper_parsing,
         },
     );
@@ -383,6 +384,7 @@ fn evaluate_intercepted_exec_policy_matches_inner_shell_commands_when_enabled() 
             sandbox_policy: &SandboxPolicy::new_read_only_policy(),
             file_system_sandbox_policy: &read_only_file_system_sandbox_policy(),
             sandbox_permissions: SandboxPermissions::UseDefault,
+            cwd: std::path::Path::new("/"),
             enable_shell_wrapper_parsing: enable_intercepted_exec_policy_shell_wrapper_parsing,
         },
     );
@@ -425,6 +427,7 @@ host_executable(name = "git", paths = ["{git_path_literal}"])
             sandbox_policy: &SandboxPolicy::new_read_only_policy(),
             file_system_sandbox_policy: &read_only_file_system_sandbox_policy(),
             sandbox_permissions: SandboxPermissions::UseDefault,
+            cwd: std::path::Path::new("/"),
             enable_shell_wrapper_parsing: false,
         },
     );
@@ -468,6 +471,7 @@ fn intercepted_exec_policy_treats_preapproved_additional_permissions_as_default(
                 SandboxPermissions::WithAdditionalPermissions,
                 true,
             ),
+            cwd: std::path::Path::new("/"),
             enable_shell_wrapper_parsing: false,
         },
     );
@@ -480,6 +484,7 @@ fn intercepted_exec_policy_treats_preapproved_additional_permissions_as_default(
             sandbox_policy: &sandbox_policy,
             file_system_sandbox_policy: &file_system_sandbox_policy,
             sandbox_permissions: SandboxPermissions::WithAdditionalPermissions,
+            cwd: std::path::Path::new("/"),
             enable_shell_wrapper_parsing: false,
         },
     );
@@ -513,6 +518,7 @@ host_executable(name = "git", paths = ["{allowed_git_literal}"])
             sandbox_policy: &SandboxPolicy::new_read_only_policy(),
             file_system_sandbox_policy: &read_only_file_system_sandbox_policy(),
             sandbox_permissions: SandboxPermissions::UseDefault,
+            cwd: std::path::Path::new("/"),
             enable_shell_wrapper_parsing: false,
         },
     );

@@ -1,4 +1,6 @@
 use super::*;
+use crate::models_manager::multi_agent_team::MultiAgentAgentConfig;
+use crate::models_manager::multi_agent_team::MultiAgentRoutingConfig;
 use pretty_assertions::assert_eq;
 
 #[test]
@@ -22,6 +24,7 @@ fn preset_names_use_mode_display_names() {
 fn default_mode_instructions_replace_mode_names_placeholder() {
     let default_instructions = default_preset(CollaborationModesConfig {
         default_mode_request_user_input: true,
+        agentic_team: None,
         multi_agent_team: None,
     })
     .developer_instructions
@@ -103,6 +106,7 @@ fn multi_agent_preset_renders_configured_team() {
                 "security".to_string(),
                 "quality".to_string(),
             ],
+            pass_threshold_percent: None,
         },
         agents: vec![
             MultiAgentAgentConfig {

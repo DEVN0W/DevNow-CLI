@@ -1,3 +1,4 @@
+use codex_core::models_manager::agentic_team::AgenticTeamConfig;
 use codex_core::models_manager::collaboration_mode_presets::CollaborationModesConfig;
 use codex_core::models_manager::multi_agent_team::MultiAgentTeamConfig;
 use codex_protocol::config_types::CollaborationModeMask;
@@ -11,20 +12,25 @@ const COLLABORATION_MODE_PLAN: &str =
     include_str!("../../core/templates/collaboration_mode/plan.md");
 const COLLABORATION_MODE_DEFAULT: &str =
     include_str!("../../core/templates/collaboration_mode/default.md");
+const COLLABORATION_MODE_AGENTIC: &str =
+    include_str!("../../core/templates/collaboration_mode/agentic.md");
 const COLLABORATION_MODE_MULTI_AGENT: &str =
     include_str!("../../core/templates/collaboration_mode/multi_agent.md");
 const KNOWN_MODE_NAMES_PLACEHOLDER: &str = "{{KNOWN_MODE_NAMES}}";
 const REQUEST_USER_INPUT_AVAILABILITY_PLACEHOLDER: &str = "{{REQUEST_USER_INPUT_AVAILABILITY}}";
 const ASKING_QUESTIONS_GUIDANCE_PLACEHOLDER: &str = "{{ASKING_QUESTIONS_GUIDANCE}}";
+const AGENTIC_TEAM_PLACEHOLDER: &str = "{{AGENTIC_TEAM}}";
 const MULTI_AGENT_TEAM_PLACEHOLDER: &str = "{{MULTI_AGENT_TEAM}}";
 
 #[derive(Debug, Clone)]
 pub(crate) struct ModelCatalog {
     models: Vec<ModelPreset>,
     collaboration_modes_config: CollaborationModesConfig,
+    collaboration_modes: Option<Vec<CollaborationModeMask>>,
 }
 
 impl ModelCatalog {
+    #[cfg(test)]
     pub(crate) fn new(
         models: Vec<ModelPreset>,
         collaboration_modes_config: CollaborationModesConfig,
@@ -32,6 +38,23 @@ impl ModelCatalog {
         Self {
             models,
             collaboration_modes_config,
+            collaboration_modes: None,
+        }
+    }
+
+    pub(crate) fn with_collaboration_modes(
+        models: Vec<ModelPreset>,
+        collaboration_modes: Vec<CollaborationModeMask>,
+        agentic_team: Option<AgenticTeamConfig>,
+    ) -> Self {
+        let collaboration_modes_config = CollaborationModesConfig {
+            agentic_team,
+            ..Default::default()
+        };
+        Self {
+            models,
+            collaboration_modes_config,
+            collaboration_modes: Some(collaboration_modes),
         }
     }
 
@@ -40,11 +63,17 @@ impl ModelCatalog {
     }
 
     pub(crate) fn list_collaboration_modes(&self) -> Vec<CollaborationModeMask> {
-        builtin_collaboration_mode_presets(self.collaboration_modes_config.clone())
+        self.collaboration_modes.clone().unwrap_or_else(|| {
+            builtin_collaboration_mode_presets(self.collaboration_modes_config.clone())
+        })
     }
 
     pub(crate) fn multi_agent_team(&self) -> Option<&MultiAgentTeamConfig> {
         self.collaboration_modes_config.multi_agent_team.as_ref()
+    }
+
+    pub(crate) fn agentic_team(&self) -> Option<&AgenticTeamConfig> {
+        self.collaboration_modes_config.agentic_team.as_ref()
     }
 }
 
@@ -54,8 +83,22 @@ fn builtin_collaboration_mode_presets(
     vec![
         plan_preset(),
         default_preset(collaboration_modes_config.clone()),
+        agentic_preset(collaboration_modes_config.agentic_team.as_ref()),
         multi_agent_preset(collaboration_modes_config.multi_agent_team.as_ref()),
     ]
+}
+
+fn agentic_preset(team: Option<&AgenticTeamConfig>) -> CollaborationModeMask {
+    CollaborationModeMask {
+        name: ModeKind::Agentic.display_name().to_string(),
+        mode: Some(ModeKind::Agentic),
+        model: None,
+        reasoning_effort: None,
+        developer_instructions: Some(Some(
+            COLLABORATION_MODE_AGENTIC
+                .replace(AGENTIC_TEAM_PLACEHOLDER, &agentic_team_instructions(team)),
+        )),
+    }
 }
 
 fn plan_preset() -> CollaborationModeMask {
@@ -89,6 +132,38 @@ fn multi_agent_preset(team: Option<&MultiAgentTeamConfig>) -> CollaborationModeM
             &multi_agent_team_instructions(team),
         ))),
     }
+}
+
+fn agentic_team_instructions(team: Option<&AgenticTeamConfig>) -> String {
+    let Some(team) = team else {
+        return "No manual agent roster is loaded. Configure `CODEX_HOME/agentic.toml` before using Multi-Agent mode.".to_string();
+    };
+
+    let mut output = String::from("## Manual agent roster\n\n");
+    if let Some(team_name) = &team.team_name {
+        output.push_str(&format!("Team name: `{team_name}`\n\n"));
+    }
+    if let Some(default_agent) = &team.default_agent {
+        output.push_str(&format!("Default agent: `{default_agent}`\n\n"));
+    }
+    for agent in &team.agents {
+        let provider = agent
+            .model_provider
+            .as_ref()
+            .map(|provider| format!(", provider: `{provider}`"))
+            .unwrap_or_default();
+        output.push_str(&format!(
+            "- `{}` - role: `{}`, model: `{}`{}\n",
+            agent.name, agent.role, agent.model, provider
+        ));
+        output.push_str("  - instructions:\n");
+        for line in agent.instructions.lines() {
+            output.push_str("    ");
+            output.push_str(line);
+            output.push('\n');
+        }
+    }
+    output
 }
 
 fn default_mode_instructions(collaboration_modes_config: CollaborationModesConfig) -> String {

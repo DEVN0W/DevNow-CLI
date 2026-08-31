@@ -205,7 +205,7 @@ fn test_anthropic_provider_uses_retry_429_backoff() {
     };
 
     let api_provider = provider.to_api_provider(None).unwrap();
-    assert!(api_provider.retry.retry_on.retry_429);
+    assert!(api_provider.retry.retry_429);
     assert_eq!(
         api_provider.retry.base_delay,
         std::time::Duration::from_millis(750)

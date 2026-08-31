@@ -1,3 +1,0 @@
-[submodule "llm_api_simple_tests"]
-	path = llm_api_simple_tests
-	url = git@github.com:Oaklight/llm_api_simple_tests.git

@@ -131,6 +131,7 @@ use crate::key_hint::KeyBinding;
 use crate::key_hint::has_ctrl_or_alt;
 use crate::line_truncation::truncate_line_with_ellipsis_if_overflow;
 use crate::ui_consts::FOOTER_INDENT_COLS;
+use codex_core::models_manager::agentic_team::AgenticAgentConfig;
 use crossterm::event::KeyCode;
 use crossterm::event::KeyEvent;
 use crossterm::event::KeyEventKind;
@@ -396,7 +397,9 @@ pub(crate) struct ChatComposer {
     skills: Option<Vec<SkillMetadata>>,
     plugins: Option<Vec<PluginCapabilitySummary>>,
     connectors_snapshot: Option<ConnectorsSnapshot>,
+    agent_mentions: Vec<AgenticAgentConfig>,
     dismissed_mention_popup_token: Option<String>,
+    dismissed_agent_popup_token: Option<String>,
     mention_bindings: HashMap<u64, ComposerMentionBinding>,
     recent_submission_mention_bindings: Vec<MentionBinding>,
     collaboration_modes_enabled: bool,
@@ -520,7 +523,9 @@ impl ChatComposer {
             skills: None,
             plugins: None,
             connectors_snapshot: None,
+            agent_mentions: Vec::new(),
             dismissed_mention_popup_token: None,
+            dismissed_agent_popup_token: None,
             mention_bindings: HashMap::new(),
             recent_submission_mention_bindings: Vec::new(),
             collaboration_modes_enabled: false,
@@ -579,6 +584,11 @@ impl ChatComposer {
         self.sync_popups();
     }
 
+    pub fn set_agent_mentions(&mut self, agents: Vec<AgenticAgentConfig>) {
+        self.agent_mentions = agents;
+        self.sync_popups();
+    }
+
     pub(crate) fn take_mention_bindings(&mut self) -> Vec<MentionBinding> {
         let elements = self.current_mention_elements();
         let mut ordered = Vec::new();
@@ -613,6 +623,7 @@ impl ChatComposer {
         indicator: Option<CollaborationModeIndicator>,
     ) {
         self.collaboration_mode_indicator = indicator;
+        self.sync_popups();
     }
 
     pub fn set_personality_command_enabled(&mut self, enabled: bool) {
@@ -1810,7 +1821,9 @@ impl ChatComposer {
             KeyEvent {
                 code: KeyCode::Esc, ..
             } => {
-                if let Some(tok) = self.current_mention_token() {
+                if let Some(tok) = self.current_agent_token() {
+                    self.dismissed_agent_popup_token = Some(tok);
+                } else if let Some(tok) = self.current_mention_token() {
                     self.dismissed_mention_popup_token = Some(tok);
                 }
                 self.active_popup = ActivePopup::None;
@@ -2105,6 +2118,35 @@ impl ChatComposer {
     /// The returned string **does not** include the leading `@`.
     fn current_at_token(textarea: &TextArea) -> Option<String> {
         Self::current_prefixed_token(textarea, '@', /*allow_empty*/ false)
+    }
+
+    fn current_agent_token(&self) -> Option<String> {
+        if self.collaboration_mode_indicator != Some(CollaborationModeIndicator::Agentic)
+            || self.agent_mentions.is_empty()
+        {
+            return None;
+        }
+
+        let query = Self::current_prefixed_token(&self.textarea, '@', /*allow_empty*/ true)?;
+        let text = self.textarea.text();
+        let cursor = Self::clamp_to_char_boundary(text, self.textarea.cursor());
+        let token_start = text[..cursor]
+            .char_indices()
+            .rfind(|(_, c)| c.is_whitespace())
+            .map(|(idx, c)| idx + c.len_utf8())
+            .unwrap_or(0);
+        let leading_start = text.len().saturating_sub(text.trim_start().len());
+        let preceding_tokens = text[leading_start..token_start].split_whitespace();
+        preceding_tokens
+            .into_iter()
+            .all(|token| {
+                token.strip_prefix('@').is_some_and(|name| {
+                    self.agent_mentions
+                        .iter()
+                        .any(|agent| agent.name.eq_ignore_ascii_case(name))
+                })
+            })
+            .then_some(query)
     }
 
     fn current_mention_token(&self) -> Option<String> {
@@ -3256,7 +3298,11 @@ impl ChatComposer {
             self.active_popup = ActivePopup::None;
             return;
         }
-        let file_token = Self::current_at_token(&self.textarea);
+        let agent_token = self.current_agent_token();
+        let file_token = agent_token
+            .is_none()
+            .then(|| Self::current_at_token(&self.textarea))
+            .flatten();
         let browsing_history = self
             .history
             .should_handle_navigation(self.textarea.text(), self.textarea.cursor());
@@ -3273,8 +3319,10 @@ impl ChatComposer {
         }
         let mention_token = self.current_mention_token();
 
-        let allow_command_popup =
-            self.slash_commands_enabled() && file_token.is_none() && mention_token.is_none();
+        let allow_command_popup = self.slash_commands_enabled()
+            && agent_token.is_none()
+            && file_token.is_none()
+            && mention_token.is_none();
         self.sync_command_popup(allow_command_popup);
 
         if matches!(self.active_popup, ActivePopup::Command(_)) {
@@ -3285,8 +3333,20 @@ impl ChatComposer {
             }
             self.dismissed_file_popup_token = None;
             self.dismissed_mention_popup_token = None;
+            self.dismissed_agent_popup_token = None;
             return;
         }
+
+        if let Some(token) = agent_token {
+            if self.current_file_query.is_some() {
+                self.app_event_tx
+                    .send(AppEvent::StartFileSearch(String::new()));
+                self.current_file_query = None;
+            }
+            self.sync_agent_popup(token);
+            return;
+        }
+        self.dismissed_agent_popup_token = None;
 
         if let Some(token) = mention_token {
             if self.current_file_query.is_some() {
@@ -3580,6 +3640,52 @@ impl ChatComposer {
                 self.active_popup = ActivePopup::Skill(popup);
             }
         }
+    }
+
+    fn sync_agent_popup(&mut self, query: String) {
+        if self.dismissed_agent_popup_token.as_ref() == Some(&query) {
+            return;
+        }
+
+        let mentions = self.agent_mention_items();
+        match &mut self.active_popup {
+            ActivePopup::Skill(popup) => {
+                popup.set_query(&query);
+                popup.set_mentions(mentions);
+            }
+            _ => {
+                let mut popup = SkillPopup::new(mentions);
+                popup.set_query(&query);
+                self.active_popup = ActivePopup::Skill(popup);
+            }
+        }
+    }
+
+    fn agent_mention_items(&self) -> Vec<MentionItem> {
+        let selected_agents = self
+            .textarea
+            .text()
+            .split_whitespace()
+            .take_while(|token| token.starts_with('@'))
+            .filter_map(|token| token.strip_prefix('@'))
+            .collect::<Vec<_>>();
+        self.agent_mentions
+            .iter()
+            .filter(|agent| {
+                !selected_agents
+                    .iter()
+                    .any(|selected| agent.name.eq_ignore_ascii_case(selected))
+            })
+            .map(|agent| MentionItem {
+                display_name: agent.name.clone(),
+                description: Some(format!("{} · {}", agent.role, agent.model)),
+                insert_text: format!("@{}", agent.name),
+                search_terms: vec![agent.name.clone(), agent.role.clone(), agent.model.clone()],
+                path: None,
+                category_tag: Some("[Agent]".to_string()),
+                sort_rank: 0,
+            })
+            .collect()
     }
 
     fn mention_items(&self) -> Vec<MentionItem> {
@@ -5477,6 +5583,119 @@ mod tests {
                     "calendar".to_string(),
                 )],
             }]));
+        });
+    }
+
+    #[test]
+    fn agent_mention_popup_lists_and_inserts_configured_agent() {
+        let (tx, _rx) = unbounded_channel::<AppEvent>();
+        let sender = AppEventSender::new(tx);
+        let mut composer = ChatComposer::new(
+            true,
+            sender,
+            false,
+            "Ask Codex to do anything".to_string(),
+            false,
+        );
+        composer.set_agent_mentions(vec![AgenticAgentConfig {
+            name: "sr-developer".to_string(),
+            role: "Senior Developer".to_string(),
+            model: "gpt-5.6-luna".to_string(),
+            model_provider: Some("azure".to_string()),
+            instructions: "Implement delegated work.".to_string(),
+        }]);
+        composer.set_collaboration_mode_indicator(Some(CollaborationModeIndicator::Agentic));
+        composer.set_text_content("@sr".to_string(), Vec::new(), Vec::new());
+
+        let ActivePopup::Skill(popup) = &composer.active_popup else {
+            panic!("expected agent mention popup");
+        };
+        assert_eq!(
+            popup.selected_mention().map(|mention| &mention.insert_text),
+            Some(&"@sr-developer".to_string())
+        );
+
+        composer.handle_key_event(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+        assert_eq!(composer.textarea.text(), "@sr-developer ");
+    }
+
+    #[test]
+    fn agent_mention_popup_supports_consecutive_unique_agents() {
+        let (tx, _rx) = unbounded_channel::<AppEvent>();
+        let sender = AppEventSender::new(tx);
+        let mut composer = ChatComposer::new(
+            true,
+            sender,
+            false,
+            "Ask Codex to do anything".to_string(),
+            false,
+        );
+        composer.set_agent_mentions(vec![
+            AgenticAgentConfig {
+                name: "sr-developer".to_string(),
+                role: "Senior Developer".to_string(),
+                model: "gpt-5.6-luna".to_string(),
+                model_provider: Some("azure".to_string()),
+                instructions: "Implement delegated work.".to_string(),
+            },
+            AgenticAgentConfig {
+                name: "developer".to_string(),
+                role: "Developer".to_string(),
+                model: "gpt-5.4".to_string(),
+                model_provider: Some("azure".to_string()),
+                instructions: "Implement scoped work.".to_string(),
+            },
+        ]);
+        composer.set_collaboration_mode_indicator(Some(CollaborationModeIndicator::Agentic));
+        composer.set_text_content("@sr-developer @dev".to_string(), Vec::new(), Vec::new());
+        composer.textarea.set_cursor(composer.textarea.text().len());
+        composer.sync_popups();
+
+        assert_eq!(composer.current_agent_token(), Some("dev".to_string()));
+        assert_eq!(
+            composer
+                .agent_mention_items()
+                .iter()
+                .map(|mention| mention.insert_text.as_str())
+                .collect::<Vec<_>>(),
+            vec!["@developer"]
+        );
+
+        let ActivePopup::Skill(popup) = &composer.active_popup else {
+            panic!("expected second agent mention popup");
+        };
+        assert_eq!(
+            popup
+                .selected_mention()
+                .map(|mention| mention.insert_text.as_str()),
+            Some("@developer")
+        );
+
+        composer.handle_key_event(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+        assert_eq!(composer.textarea.text(), "@sr-developer @developer ");
+    }
+
+    #[test]
+    fn agent_mention_popup_snapshot() {
+        snapshot_composer_state_with_width("agent_mention_popup", 84, false, |composer| {
+            composer.set_agent_mentions(vec![
+                AgenticAgentConfig {
+                    name: "principal-architect".to_string(),
+                    role: "Principal Architect".to_string(),
+                    model: "gpt-5.6-sol".to_string(),
+                    model_provider: Some("azure".to_string()),
+                    instructions: "Own architecture.".to_string(),
+                },
+                AgenticAgentConfig {
+                    name: "sr-developer".to_string(),
+                    role: "Senior Developer".to_string(),
+                    model: "gpt-5.6-luna".to_string(),
+                    model_provider: Some("azure".to_string()),
+                    instructions: "Implement delegated work.".to_string(),
+                },
+            ]);
+            composer.set_collaboration_mode_indicator(Some(CollaborationModeIndicator::Agentic));
+            composer.set_text_content("@".to_string(), Vec::new(), Vec::new());
         });
     }
 

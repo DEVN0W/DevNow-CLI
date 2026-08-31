@@ -13,6 +13,7 @@ pub enum SlashCommand {
     // DO NOT ALPHA-SORT! Enum order is presentation order in the popup, so
     // more frequently used commands should be listed first.
     Model,
+    Mode,
     Fast,
     Approvals,
     Permissions,
@@ -95,12 +96,13 @@ impl SlashCommand {
             SlashCommand::MemoryDrop => "DO NOT USE",
             SlashCommand::MemoryUpdate => "DO NOT USE",
             SlashCommand::Model => "choose what model and reasoning effort to use",
+            SlashCommand::Mode => "choose Single AI, Multi-Agent, or Multi-Agent Strategic",
             SlashCommand::Fast => "toggle Fast mode to enable fastest inference at 2X plan usage",
             SlashCommand::Personality => "choose a communication style for Codex",
             SlashCommand::Realtime => "toggle realtime voice mode (experimental)",
             SlashCommand::Settings => "configure realtime microphone/speaker",
             SlashCommand::Plan => "switch to Plan mode",
-            SlashCommand::Collab => "change collaboration mode (experimental)",
+            SlashCommand::Collab => "alias for /mode",
             SlashCommand::Agent | SlashCommand::MultiAgents => "switch the active agent thread",
             SlashCommand::Approvals => "choose what Codex is allowed to do",
             SlashCommand::Permissions => "choose what Codex is allowed to do",
@@ -178,7 +180,7 @@ impl SlashCommand {
             SlashCommand::TestApproval => true,
             SlashCommand::Realtime => true,
             SlashCommand::Settings => true,
-            SlashCommand::Collab => true,
+            SlashCommand::Mode | SlashCommand::Collab => false,
             SlashCommand::Agent | SlashCommand::MultiAgents => true,
             SlashCommand::Statusline => false,
             SlashCommand::Theme => false,
@@ -219,5 +221,17 @@ mod tests {
     #[test]
     fn clean_alias_parses_to_stop_command() {
         assert_eq!(SlashCommand::from_str("clean"), Ok(SlashCommand::Stop));
+    }
+
+    #[test]
+    fn mode_command_and_collab_alias_are_registered() {
+        assert_eq!(SlashCommand::Mode.command(), "mode");
+        assert_eq!(SlashCommand::from_str("mode"), Ok(SlashCommand::Mode));
+        assert_eq!(SlashCommand::from_str("collab"), Ok(SlashCommand::Collab));
+        assert_eq!(
+            SlashCommand::Mode.available_during_task(),
+            SlashCommand::Collab.available_during_task()
+        );
+        assert!(!SlashCommand::Mode.available_during_task());
     }
 }

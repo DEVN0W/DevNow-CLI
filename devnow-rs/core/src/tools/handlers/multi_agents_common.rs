@@ -1,9 +1,13 @@
 use crate::agent::AgentStatus;
+use crate::agent::role::apply_role_to_config;
+use crate::agent::role::resolve_role_config;
 use crate::codex::Session;
 use crate::codex::TurnContext;
 use crate::config::Config;
 use crate::error::CodexErr;
 use crate::function_tool::FunctionCallError;
+use crate::model_provider_info::DEVNOW_GATEWAY_PROVIDER_ID;
+use crate::model_provider_info::OPENAI_PROVIDER_ID;
 use crate::models_manager::manager::RefreshStrategy;
 use crate::tools::context::FunctionToolOutput;
 use crate::tools::context::ToolOutput;
@@ -11,6 +15,7 @@ use crate::tools::context::ToolPayload;
 use codex_features::Feature;
 use codex_protocol::AgentPath;
 use codex_protocol::ThreadId;
+use codex_protocol::config_types::ModeKind;
 use codex_protocol::models::BaseInstructions;
 use codex_protocol::models::ResponseInputItem;
 use codex_protocol::openai_models::ReasoningEffort;
@@ -226,6 +231,123 @@ pub(crate) fn build_agent_spawn_config(
     Ok(config)
 }
 
+pub(crate) fn apply_mode_roster_overrides(
+    session: &Session,
+    turn: &TurnContext,
+    config: &mut Config,
+    role_name: Option<&str>,
+    requested_model: Option<&str>,
+) -> Result<(), FunctionCallError> {
+    let (agent_name, agent_role, agent_instructions, model, model_provider_id, roster_name) =
+        match turn.collaboration_mode.mode {
+            ModeKind::Agentic => {
+                let Some(team) = session.services.models_manager.agentic_team() else {
+                    return Err(missing_roster_error(
+                        turn,
+                        "agentic.toml",
+                        "manual agent roster",
+                    ));
+                };
+                let Some(agent) = team.agent_for_request(role_name) else {
+                    let missing_role = role_name.unwrap_or("default");
+                    return Err(FunctionCallError::RespondToModel(format!(
+                        "manual agent roster in agentic.toml has no configured agent for `{missing_role}`; set `default_agent` or provide an explicit `agent_type`"
+                    )));
+                };
+                (
+                    agent.name.as_str(),
+                    agent.role.as_str(),
+                    agent.instructions.as_str(),
+                    agent.model.as_str(),
+                    agent.model_provider.as_deref(),
+                    "manual agent roster in agentic.toml",
+                )
+            }
+            ModeKind::MultiAgent => {
+                let Some(team) = session.services.models_manager.multi_agent_team() else {
+                    return Err(missing_roster_error(
+                        turn,
+                        "multi_agent.toml",
+                        "strategic multi-agent roster",
+                    ));
+                };
+                let Some(agent) = team.agent_for_request(role_name) else {
+                    let missing_role = role_name.unwrap_or("default");
+                    return Err(FunctionCallError::RespondToModel(format!(
+                        "strategic multi-agent roster in multi_agent.toml has no configured agent for `{missing_role}`; set `default_agent` or provide an explicit `agent_type`"
+                    )));
+                };
+                (
+                    agent.name.as_str(),
+                    agent.role.as_str(),
+                    agent.instructions.as_str(),
+                    agent.model.as_str(),
+                    agent.model_provider.as_deref(),
+                    "strategic multi-agent roster in multi_agent.toml",
+                )
+            }
+            ModeKind::Default | ModeKind::Plan | ModeKind::PairProgramming | ModeKind::Execute => {
+                return Ok(());
+            }
+        };
+
+    config.developer_instructions = Some(format!(
+        "You are `{agent_name}`, the configured `{agent_role}` agent. Stay within this role.\n\n{agent_instructions}"
+    ));
+
+    if requested_model.is_none() {
+        config.model = Some(model.to_string());
+    }
+
+    let Some(model_provider_id) = model_provider_id.filter(|_| requested_model.is_none()) else {
+        return Ok(());
+    };
+    let Some(model_provider) = config.model_providers.get(model_provider_id).cloned() else {
+        return Err(FunctionCallError::RespondToModel(format!(
+            "{roster_name} references unavailable model provider `{model_provider_id}` for `{agent_name}`; configure that provider for this thread"
+        )));
+    };
+    config.model_provider_id = model_provider_id.to_string();
+    config.model_provider = model_provider;
+    Ok(())
+}
+
+pub(crate) async fn apply_mode_agent_role_config(
+    session: &Session,
+    turn: &TurnContext,
+    config: &mut Config,
+    role_name: Option<&str>,
+) -> Result<(), FunctionCallError> {
+    let role_name = resolve_mode_agent_role_name(session, turn, role_name)?;
+    let role_name = role_name.as_deref();
+    if role_name.is_some_and(|role_name| resolve_role_config(config, role_name).is_none())
+        && mode_roster_has_agent(session, turn, role_name)
+    {
+        return Ok(());
+    }
+    apply_role_to_config(config, role_name)
+        .await
+        .map_err(FunctionCallError::RespondToModel)
+}
+
+fn mode_roster_has_agent(session: &Session, turn: &TurnContext, role_name: Option<&str>) -> bool {
+    match turn.collaboration_mode.mode {
+        ModeKind::Agentic => session
+            .services
+            .models_manager
+            .agentic_team()
+            .and_then(|team| team.agent_for_request(role_name))
+            .is_some(),
+        ModeKind::MultiAgent => session
+            .services
+            .models_manager
+            .multi_agent_team()
+            .and_then(|team| team.agent_for_request(role_name))
+            .is_some(),
+        ModeKind::Default | ModeKind::Plan | ModeKind::PairProgramming | ModeKind::Execute => false,
+    }
+}
+
 pub(crate) fn apply_multi_agent_team_overrides(
     session: &Session,
     config: &mut Config,
@@ -238,43 +360,76 @@ pub(crate) fn apply_multi_agent_team_overrides(
     let Some(agent) = team.agent_for_request(role_name) else {
         let missing_role = role_name.unwrap_or("default");
         return Err(FunctionCallError::RespondToModel(format!(
-            "multi-agent roster has no configured default agent for `{missing_role}`; set `default_agent` in multi_agent.toml or provide an explicit `agent_type`"
+            "strategic multi-agent roster in multi_agent.toml has no configured agent for `{missing_role}`; set `default_agent` or provide an explicit `agent_type`"
         )));
     };
 
     if requested_model.is_none() {
         config.model = Some(agent.model.clone());
     }
-
-    let Some(model_provider_id) = agent.model_provider.as_ref() else {
-        return Ok(());
-    };
-    let Some(model_provider) = config.model_providers.get(model_provider_id).cloned() else {
-        return Err(FunctionCallError::RespondToModel(format!(
-            "multi-agent roster references unknown model provider `{model_provider_id}` for `{}`",
-            agent.name
-        )));
-    };
-    config.model_provider_id = model_provider_id.clone();
-    config.model_provider = model_provider;
+    if let Some(model_provider_id) = agent.model_provider.as_ref() {
+        let Some(model_provider) = config.model_providers.get(model_provider_id).cloned() else {
+            return Err(FunctionCallError::RespondToModel(format!(
+                "strategic multi-agent roster in multi_agent.toml references unavailable model provider `{model_provider_id}` for `{}`; configure that provider for this thread",
+                agent.name
+            )));
+        };
+        config.model_provider_id = model_provider_id.clone();
+        config.model_provider = model_provider;
+    }
     Ok(())
 }
 
-pub(crate) fn resolve_multi_agent_role_name<'a>(
-    session: &'a Session,
-    role_name: Option<&'a str>,
-) -> Result<Option<&'a str>, FunctionCallError> {
-    let Some(team) = session.services.models_manager.multi_agent_team() else {
-        return Ok(role_name);
-    };
+pub(crate) fn resolve_mode_agent_role_name(
+    session: &Session,
+    turn: &TurnContext,
+    role_name: Option<&str>,
+) -> Result<Option<String>, FunctionCallError> {
     if let Some(role_name) = role_name {
-        return Ok(Some(role_name));
+        return Ok(Some(role_name.to_string()));
     }
-    if let Some(default_agent) = team.default_agent.as_deref() {
-        return Ok(Some(default_agent));
+
+    let default_agent = match turn.collaboration_mode.mode {
+        ModeKind::Agentic => session
+            .services
+            .models_manager
+            .agentic_team()
+            .ok_or_else(|| missing_roster_error(turn, "agentic.toml", "manual agent roster"))?
+            .default_agent
+            .clone(),
+        ModeKind::MultiAgent => session
+            .services
+            .models_manager
+            .multi_agent_team()
+            .ok_or_else(|| {
+                missing_roster_error(turn, "multi_agent.toml", "strategic multi-agent roster")
+            })?
+            .default_agent
+            .clone(),
+        ModeKind::Default | ModeKind::Plan | ModeKind::PairProgramming | ModeKind::Execute => None,
+    };
+    if default_agent.is_some() {
+        return Ok(default_agent);
     }
-    Err(FunctionCallError::RespondToModel(
-        "multi-agent roster needs `default_agent` or an explicit `agent_type`".to_string(),
+    if turn.collaboration_mode.mode.uses_manual_roster()
+        || turn.collaboration_mode.mode.uses_strategic_roster()
+    {
+        return Err(FunctionCallError::RespondToModel(format!(
+            "{} needs `default_agent` or an explicit `agent_type`",
+            turn.collaboration_mode.mode.display_name()
+        )));
+    }
+    Ok(None)
+}
+
+fn missing_roster_error(
+    turn: &TurnContext,
+    file_name: &str,
+    roster_description: &str,
+) -> FunctionCallError {
+    FunctionCallError::RespondToModel(format!(
+        "{roster_description} is unavailable; expected a valid configuration at {}",
+        turn.config.codex_home.join(file_name).display()
     ))
 }
 
@@ -365,6 +520,7 @@ pub(crate) async fn apply_requested_spawn_agent_model_overrides(
             .await;
 
         config.model = Some(selected_model_name.clone());
+        apply_requested_model_provider(config, &selected_model_name)?;
         if let Some(reasoning_effort) = requested_reasoning_effort {
             validate_spawn_agent_reasoning_effort(
                 &selected_model_name,
@@ -388,6 +544,30 @@ pub(crate) async fn apply_requested_spawn_agent_model_overrides(
         config.model_reasoning_effort = Some(reasoning_effort);
     }
 
+    Ok(())
+}
+
+fn apply_requested_model_provider(
+    config: &mut Config,
+    requested_model: &str,
+) -> Result<(), FunctionCallError> {
+    let provider_id = if requested_model.starts_with("claude-") {
+        Some(DEVNOW_GATEWAY_PROVIDER_ID)
+    } else if config.model_provider_id == DEVNOW_GATEWAY_PROVIDER_ID {
+        Some(OPENAI_PROVIDER_ID)
+    } else {
+        None
+    };
+    let Some(provider_id) = provider_id else {
+        return Ok(());
+    };
+    let Some(provider) = config.model_providers.get(provider_id).cloned() else {
+        return Err(FunctionCallError::RespondToModel(format!(
+            "requested model `{requested_model}` requires unavailable model provider `{provider_id}`"
+        )));
+    };
+    config.model_provider_id = provider_id.to_string();
+    config.model_provider = provider;
     Ok(())
 }
 
@@ -431,4 +611,51 @@ fn validate_spawn_agent_reasoning_effort(
     Err(FunctionCallError::RespondToModel(format!(
         "Reasoning effort `{requested_reasoning_effort}` is not supported for model `{model}`. Supported reasoning efforts: {supported}"
     )))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::ConfigBuilder;
+    use pretty_assertions::assert_eq;
+    use tempfile::tempdir;
+
+    async fn test_config() -> Config {
+        let home = tempdir().expect("create temp dir");
+        ConfigBuilder::default()
+            .codex_home(home.path().to_path_buf())
+            .fallback_cwd(Some(home.path().to_path_buf()))
+            .build()
+            .await
+            .expect("build config")
+    }
+
+    #[tokio::test]
+    async fn requested_claude_model_reuses_managed_claude_provider() {
+        let mut config = test_config().await;
+
+        apply_requested_model_provider(&mut config, "claude-fable-5")
+            .expect("select Claude provider");
+
+        assert_eq!(config.model_provider_id, DEVNOW_GATEWAY_PROVIDER_ID);
+        assert_eq!(
+            config.model_provider,
+            config.model_providers[DEVNOW_GATEWAY_PROVIDER_ID]
+        );
+    }
+
+    #[tokio::test]
+    async fn requested_gpt_model_resets_managed_claude_provider_to_openai() {
+        let mut config = test_config().await;
+        config.model_provider_id = DEVNOW_GATEWAY_PROVIDER_ID.to_string();
+        config.model_provider = config.model_providers[DEVNOW_GATEWAY_PROVIDER_ID].clone();
+
+        apply_requested_model_provider(&mut config, "gpt-5.4").expect("select OpenAI provider");
+
+        assert_eq!(config.model_provider_id, OPENAI_PROVIDER_ID);
+        assert_eq!(
+            config.model_provider,
+            config.model_providers[OPENAI_PROVIDER_ID]
+        );
+    }
 }

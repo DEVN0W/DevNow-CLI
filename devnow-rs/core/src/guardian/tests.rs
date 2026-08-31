@@ -15,6 +15,8 @@ use crate::config_loader::NetworkDomainPermissionToml;
 use crate::config_loader::NetworkDomainPermissionsToml;
 use crate::config_loader::RequirementSource;
 use crate::config_loader::Sourced;
+use crate::guardian::prompt::collect_guardian_transcript_entries;
+use crate::guardian::prompt::render_guardian_transcript_entries;
 use crate::protocol::SandboxPolicy;
 use crate::test_support;
 use codex_network_proxy::NetworkProxyConfig;

@@ -1301,7 +1301,10 @@ impl SessionHeaderHistoryCell {
 }
 
 const DEVNOW_BRAND_ACCENT: Color = Color::Rgb(0xEE, 0x44, 0x37);
+const DEVNOW_ROBOT_ORANGE: Color = Color::Indexed(208);
+const DEVNOW_ROBOT_RED: Color = Color::Indexed(160);
 const DEVNOW_BRAND_NARROW_MIN_WIDTH: usize = 15;
+const DEVNOW_ROBOT_MIN_WIDTH: usize = 28;
 
 /// Truncate `s` to at most `max_width` display columns, measured with
 /// [`UnicodeWidthStr`]/[`UnicodeWidthChar`] rather than byte length.
@@ -1348,13 +1351,38 @@ fn devnow_brand_lines(inner_width: usize) -> Vec<Line<'static>> {
         return vec![Line::from(word).bold().fg(Color::Gray)];
     }
 
-    let mut lines = vec![
-        Line::from(truncate_to_width("DEVNOW", inner_width))
-            .bold()
-            .fg(Color::Gray),
-        Line::from(truncate_to_width("D E V N O W", inner_width)).fg(DEVNOW_BRAND_ACCENT),
-        Line::from(truncate_to_width("TERMINAL AI AGENT", inner_width)).dim(),
-    ];
+    let mut lines = if inner_width >= DEVNOW_ROBOT_MIN_WIDTH {
+        vec![
+            Line::from(vec![
+                "   ▄█▄   ".fg(DEVNOW_ROBOT_ORANGE),
+                "  ".into(),
+                "DEVNOW".bold().fg(Color::Gray),
+            ]),
+            Line::from(vec![
+                " ▄█████▄ ".fg(DEVNOW_BRAND_ACCENT),
+                "  ".into(),
+                "D E V N O W".fg(DEVNOW_BRAND_ACCENT),
+            ]),
+            Line::from(vec![
+                "██ ".fg(DEVNOW_ROBOT_RED),
+                "▀".fg(DEVNOW_ROBOT_ORANGE),
+                " ".into(),
+                "▀".fg(DEVNOW_ROBOT_ORANGE),
+                " ██".fg(DEVNOW_ROBOT_RED),
+                "  ".into(),
+                "TERMINAL AI AGENT".dim(),
+            ]),
+            Line::from(" ▀█████▀ ".fg(DEVNOW_ROBOT_RED)),
+        ]
+    } else {
+        vec![
+            Line::from(truncate_to_width("DEVNOW", inner_width))
+                .bold()
+                .fg(Color::Gray),
+            Line::from(truncate_to_width("D E V N O W", inner_width)).fg(DEVNOW_BRAND_ACCENT),
+            Line::from(truncate_to_width("TERMINAL AI AGENT", inner_width)).dim(),
+        ]
+    };
     lines.push(fading_divider(inner_width));
     lines
 }
@@ -3605,6 +3633,32 @@ mod tests {
         assert!(rendered.contains("DEVNOW"));
         assert!(rendered.contains("D E V N O W"));
         assert_no_anywherenow(&lines);
+    }
+
+    #[test]
+    fn devnow_brand_lines_show_pixel_robot_snapshot() {
+        let lines = devnow_brand_lines(50);
+        let rendered = render_lines(&lines).join("\n");
+
+        assert_eq!(lines.len(), 5);
+        assert!(rendered.contains("▄█████▄"));
+        assert!(rendered.contains("██ ▀ ▀ ██"));
+        assert!(rendered.contains("▀█████▀"));
+        insta::assert_snapshot!("devnow_pixel_robot_brand", rendered);
+    }
+
+    #[test]
+    fn devnow_brand_lines_hide_robot_below_minimum_width() {
+        let lines = devnow_brand_lines(DEVNOW_ROBOT_MIN_WIDTH - 1);
+        let rendered = render_lines(&lines).join("\n");
+
+        assert_eq!(lines.len(), 4);
+        assert!(!rendered.contains('█'));
+        assert!(
+            lines
+                .iter()
+                .all(|line| line_width(line) < DEVNOW_ROBOT_MIN_WIDTH)
+        );
     }
 
     #[test]

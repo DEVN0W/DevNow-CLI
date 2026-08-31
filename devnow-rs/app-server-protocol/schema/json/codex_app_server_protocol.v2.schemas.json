@@ -5843,6 +5843,7 @@
       "enum": [
         "plan",
         "default",
+        "agentic",
         "multi_agent"
       ],
       "type": "string"

@@ -11,6 +11,7 @@ use crate::default_client::build_reqwest_client;
 use crate::error::CodexErr;
 use crate::error::Result as CoreResult;
 use crate::model_provider_info::ModelProviderInfo;
+use crate::models_manager::agentic_team::AgenticTeamConfig;
 use crate::models_manager::collaboration_mode_presets::CollaborationModesConfig;
 use crate::models_manager::collaboration_mode_presets::builtin_collaboration_mode_presets;
 use crate::models_manager::model_info;
@@ -273,6 +274,10 @@ impl ModelsManager {
 
     pub fn multi_agent_team(&self) -> Option<&MultiAgentTeamConfig> {
         self.collaboration_modes_config.multi_agent_team.as_ref()
+    }
+
+    pub fn agentic_team(&self) -> Option<&AgenticTeamConfig> {
+        self.collaboration_modes_config.agentic_team.as_ref()
     }
 
     /// Attempt to list models without blocking, using the current cached state.
@@ -602,10 +607,19 @@ impl ModelsManager {
 
 fn claude_reasoning_efforts() -> Vec<ReasoningEffortPreset> {
     [
-        (ReasoningEffort::Low, "Fast responses with lighter reasoning"),
-        (ReasoningEffort::Medium, "Balanced reasoning for everyday work"),
+        (
+            ReasoningEffort::Low,
+            "Fast responses with lighter reasoning",
+        ),
+        (
+            ReasoningEffort::Medium,
+            "Balanced reasoning for everyday work",
+        ),
         (ReasoningEffort::High, "Deeper reasoning for complex tasks"),
-        (ReasoningEffort::XHigh, "Maximum reasoning for difficult tasks"),
+        (
+            ReasoningEffort::XHigh,
+            "Maximum reasoning for difficult tasks",
+        ),
     ]
     .into_iter()
     .map(|(effort, description)| ReasoningEffortPreset {
@@ -651,6 +665,11 @@ fn devnow_model_presets() -> Vec<ModelPreset> {
             "claude-opus-4-8",
             "Claude Opus 4.8",
             "Highest-capability Claude model via DevNow Gateway.",
+        ),
+        (
+            "claude-fable-5",
+            "Claude Fable 5",
+            "Senior architecture and long-horizon review model via DevNow Gateway.",
         ),
         (
             "claude-opus-4-7",

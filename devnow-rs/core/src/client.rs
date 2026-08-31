@@ -1074,10 +1074,7 @@ impl ModelClientSession {
         session_telemetry: &SessionTelemetry,
         model_info: &ModelInfo,
     ) -> std::result::Result<(), ApiError> {
-        if !self
-            .client
-            .responses_websocket_enabled(&model_info.slug)
-        {
+        if !self.client.responses_websocket_enabled(&model_info.slug) {
             return Ok(());
         }
         if self.websocket_session.connection.is_some() {
@@ -1557,10 +1554,7 @@ impl ModelClientSession {
         service_tier: Option<ServiceTier>,
         turn_metadata_header: Option<&str>,
     ) -> Result<()> {
-        if !self
-            .client
-            .responses_websocket_enabled(&model_info.slug)
-        {
+        if !self.client.responses_websocket_enabled(&model_info.slug) {
             return Ok(());
         }
         if self.websocket_session.last_request.is_some() {
@@ -1626,10 +1620,7 @@ impl ModelClientSession {
         };
         match wire_api {
             WireApi::Responses | WireApi::ManagedDevNowGateway => {
-                if self
-                    .client
-                    .responses_websocket_enabled(&model_info.slug)
-                {
+                if self.client.responses_websocket_enabled(&model_info.slug) {
                     let request_trace = current_span_w3c_trace_context();
                     match self
                         .stream_responses_websocket(

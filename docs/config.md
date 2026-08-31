@@ -6,6 +6,17 @@ For advanced configuration instructions, see [this documentation](https://develo
 
 For a full configuration reference, see [this documentation](https://developers.openai.com/codex/config-reference).
 
+## Operating modes
+
+Use `/mode` to select one of DevNow's three operating modes:
+
+- **Single AI** is the startup default and uses the model, provider, and runtime settings from `config.toml`.
+- **Multi-Agent** is manual orchestration. It loads `CODEX_HOME/agentic.toml`, but agents remain inactive until the root AI calls an agent tool such as `spawn_agent`.
+- In Multi-Agent mode, begin a prompt with `@<agent-name>` to explicitly dispatch that configured agent. Use consecutive leading mentions such as `@frontend-dev @backend-dev` to run independent assignments from the same plan concurrently; each result is labeled by agent name. Sequential calls retain a bounded handoff history, so the next agent receives the prior request, result, and target workspace. When the task contains a new absolute target path, that project replaces the carried workspace and supplies its project instructions instead of inheriting the launch repository. The running-agent card shows each resolved roster model.
+- **Multi-Agent Strategic** is automatic orchestration. It loads `CODEX_HOME/multi_agent.toml` and runs the configured strategic workflow for each turn.
+
+Plan remains available through `/plan`; it is not a fourth `/mode` choice. `/collab` remains an alias for `/mode`.
+
 ## Model providers
 
 If you do not set a custom `model_provider`, Codex uses the built-in `openai`
@@ -58,9 +69,9 @@ without changing the normal path for other agents. For Foundry, use the
 project endpoint plus `/openai/v1` so the final request path matches the
 Azure AI Projects OpenAI client behavior.
 
-The multi-agent roster in `CODEX_HOME/multi_agent.toml` can then point each
-agent at one of those provider ids with `model_provider`, so different agents
-can use different backends in the same workflow.
+The manual roster in `CODEX_HOME/agentic.toml` and strategic roster in
+`CODEX_HOME/multi_agent.toml` can point each agent at one of those provider ids
+with `model_provider`, so different agents can use different backends.
 
 ### Where to edit each file
 
@@ -69,9 +80,18 @@ can use different backends in the same workflow.
   - Put each API base URL, token env var, and wire API there.
   - Use `extra_body` for provider-specific request payload fields such as
     Foundry `agent_reference`.
+- `~/.codex/agentic.toml`
+  - Define agents available for manual delegation.
+  - Do not put provider URLs or API keys in this file.
+  - Copy `docs/agentic.sample.toml` to use the recommended initial roster.
 - `~/.codex/multi_agent.toml`
-  - Define the agent roster.
+  - Define the automatic strategic roster and routing.
   - Set `model_provider = "<id>"` per agent to choose which provider that agent uses.
+
+The built-in provider ids used by the recommended manual roster are `openai`
+for GPT models and `claude` for managed Claude models. They reuse the effective
+OpenAI configuration and the existing `DEVNOW_CLAUDE_API_KEY` with optional
+`DEVNOW_CLAUDE_BASE_URL`; `agentic.toml` never duplicates those values.
 
 Example:
 

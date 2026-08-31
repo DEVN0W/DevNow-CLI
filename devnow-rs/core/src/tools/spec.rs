@@ -32,6 +32,7 @@ use crate::tools::registry::ToolRegistryBuilder;
 use crate::tools::registry::tool_handler_key;
 use codex_features::Feature;
 use codex_features::Features;
+use codex_protocol::config_types::ModeKind;
 use codex_protocol::config_types::WebSearchConfig;
 use codex_protocol::config_types::WebSearchMode;
 use codex_protocol::config_types::WindowsSandboxLevel;
@@ -354,11 +355,32 @@ pub(crate) struct ToolsConfig {
     pub can_request_original_image_detail: bool,
     pub collab_tools: bool,
     pub multi_agent_v2: bool,
+    pub delegation_policy: DelegationPolicy,
     pub request_user_input: bool,
     pub default_mode_request_user_input: bool,
     pub experimental_supported_tools: Vec<String>,
     pub agent_jobs_tools: bool,
     pub agent_jobs_worker_tools: bool,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub(crate) enum DelegationPolicy {
+    #[default]
+    ExplicitRequest,
+    OptionalManual,
+    RequiredStrategic,
+}
+
+impl From<ModeKind> for DelegationPolicy {
+    fn from(mode: ModeKind) -> Self {
+        match mode {
+            ModeKind::Agentic => Self::OptionalManual,
+            ModeKind::MultiAgent => Self::RequiredStrategic,
+            ModeKind::Default | ModeKind::Plan | ModeKind::PairProgramming | ModeKind::Execute => {
+                Self::ExplicitRequest
+            }
+        }
+    }
 }
 
 pub(crate) struct ToolsConfigParams<'a> {
@@ -488,6 +510,7 @@ impl ToolsConfig {
             can_request_original_image_detail: include_original_image_detail,
             collab_tools: include_collab_tools,
             multi_agent_v2: include_multi_agent_v2,
+            delegation_policy: DelegationPolicy::default(),
             request_user_input: include_request_user_input,
             default_mode_request_user_input: include_default_mode_request_user_input,
             experimental_supported_tools: model_info.experimental_supported_tools.clone(),
@@ -498,6 +521,11 @@ impl ToolsConfig {
 
     pub fn with_agent_roles(mut self, agent_roles: BTreeMap<String, AgentRoleConfig>) -> Self {
         self.agent_roles = agent_roles;
+        self
+    }
+
+    pub(crate) fn with_delegation_policy(mut self, delegation_policy: DelegationPolicy) -> Self {
+        self.delegation_policy = delegation_policy;
         self
     }
 
@@ -1150,12 +1178,18 @@ fn spawn_agent_common_properties(config: &ToolsConfig) -> BTreeMap<String, JsonS
 fn spawn_agent_tool_description(
     available_models_description: &str,
     return_value_description: &str,
-    multi_agent_mode: bool,
+    delegation_policy: DelegationPolicy,
 ) -> String {
-    let delegation_policy = if multi_agent_mode {
-        "Multi Agent mode requires delegation. Start with the architect and planner, then route the work through the configured roster instead of solving it solo. The architect and planner coordinate only; they must not implement code or run tests. Use `spawn_agent` proactively for bounded subproblems that benefit from dedicated role-specific agents, even when the user did not spell out delegation explicitly. After a stage passes, hand it off with `send_message` or `assign_task` to the next agent instead of keeping it in one thread. If the current agent starts drifting into implementation, stop and hand the work to the developer."
-    } else {
-        "Only use `spawn_agent` if and only if the user explicitly asks for sub-agents, delegation, or parallel agent work."
+    let delegation_policy = match delegation_policy {
+        DelegationPolicy::ExplicitRequest => {
+            "Only use `spawn_agent` if and only if the user explicitly asks for sub-agents, delegation, or parallel agent work."
+        }
+        DelegationPolicy::OptionalManual => {
+            "Agents are available for optional manual orchestration. A user prompt beginning with `@<configured-agent>` is an explicit delegation command: immediately call `spawn_agent` with that name as `agent_type` and the remaining text as the task, without performing the task in the root thread first. For prompts without an explicit agent mention, use `spawn_agent` only when delegation materially helps; otherwise complete the work in the root thread. Never claim an agent ran unless an agent tool call actually ran."
+        }
+        DelegationPolicy::RequiredStrategic => {
+            "Multi-Agent Strategic mode requires delegation. Start with the architect and planner, then route the work through the configured roster instead of solving it solo. The architect and planner coordinate only; they must not implement code or run tests. Use `spawn_agent` proactively for bounded subproblems that benefit from dedicated role-specific agents, even when the user did not spell out delegation explicitly. After a stage passes, hand it off with `send_message` or `assign_task` to the next agent instead of keeping it in one thread. If the current agent starts drifting into implementation, stop and hand the work to the developer."
+        }
     };
 
     format!(
@@ -1211,7 +1245,7 @@ fn create_spawn_agent_tool_v1(config: &ToolsConfig) -> ToolSpec {
         description: spawn_agent_tool_description(
             &available_models_description,
             return_value_description,
-            config.multi_agent_v2,
+            config.delegation_policy,
         ),
         strict: false,
         defer_loading: None,
@@ -1243,7 +1277,7 @@ fn create_spawn_agent_tool_v2(config: &ToolsConfig) -> ToolSpec {
         description: spawn_agent_tool_description(
             &available_models_description,
             return_value_description,
-            config.multi_agent_v2,
+            config.delegation_policy,
         ),
         strict: false,
         defer_loading: None,
@@ -2648,6 +2682,7 @@ pub(crate) fn build_specs_with_discoverable_tools(
             &mut builder,
             create_request_user_input_tool(CollaborationModesConfig {
                 default_mode_request_user_input: config.default_mode_request_user_input,
+                agentic_team: None,
                 multi_agent_team: None,
             }),
             /*supports_parallel_tool_calls*/ false,

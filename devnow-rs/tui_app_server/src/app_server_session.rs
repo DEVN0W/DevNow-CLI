@@ -7,6 +7,8 @@ use codex_app_server_client::TypedRequestError;
 use codex_app_server_protocol::Account;
 use codex_app_server_protocol::AuthMode;
 use codex_app_server_protocol::ClientRequest;
+use codex_app_server_protocol::CollaborationModeListParams;
+use codex_app_server_protocol::CollaborationModeListResponse;
 use codex_app_server_protocol::ConfigBatchWriteParams;
 use codex_app_server_protocol::ConfigWriteResponse;
 use codex_app_server_protocol::GetAccountParams;
@@ -66,6 +68,7 @@ use codex_core::config::Config;
 use codex_core::message_history;
 use codex_otel::TelemetryAuthMode;
 use codex_protocol::ThreadId;
+use codex_protocol::config_types::CollaborationModeMask;
 use codex_protocol::openai_models::ModelAvailabilityNux;
 use codex_protocol::openai_models::ModelPreset;
 use codex_protocol::openai_models::ModelUpgrade;
@@ -97,6 +100,7 @@ pub(crate) struct AppServerBootstrap {
     pub(crate) feedback_audience: FeedbackAudience,
     pub(crate) has_chatgpt_account: bool,
     pub(crate) available_models: Vec<ModelPreset>,
+    pub(crate) collaboration_modes: Vec<CollaborationModeMask>,
     pub(crate) rate_limit_snapshots: Vec<RateLimitSnapshot>,
 }
 
@@ -186,6 +190,26 @@ impl AppServerSession {
             .into_iter()
             .map(model_preset_from_api_model)
             .collect::<Vec<_>>();
+        let collaboration_mode_request_id = self.next_request_id();
+        let collaboration_modes: CollaborationModeListResponse = self
+            .client
+            .request_typed(ClientRequest::CollaborationModeList {
+                request_id: collaboration_mode_request_id,
+                params: CollaborationModeListParams {},
+            })
+            .await
+            .wrap_err("collaborationMode/list failed during TUI bootstrap")?;
+        let collaboration_modes = collaboration_modes
+            .data
+            .into_iter()
+            .map(|mode| CollaborationModeMask {
+                name: mode.name,
+                mode: mode.mode,
+                model: mode.model,
+                reasoning_effort: mode.reasoning_effort,
+                developer_instructions: None,
+            })
+            .collect();
         let default_model = config
             .model
             .clone()
@@ -275,6 +299,7 @@ impl AppServerSession {
             feedback_audience,
             has_chatgpt_account,
             available_models,
+            collaboration_modes,
             rate_limit_snapshots,
         })
     }
