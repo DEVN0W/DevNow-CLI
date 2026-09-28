@@ -1,8 +1,18 @@
-# External (non-OpenAI) Pull Request Requirements
+## What changed
 
-Before opening this Pull Request, please read the dedicated "Contributing" markdown file or your PR may be closed:
-https://github.com/openai/codex/blob/main/docs/contributing.md
+Describe the change and the user-visible result.
 
-If your PR conforms to our contribution guidelines, replace this text with a detailed and high quality description of your changes.
+## Why
 
-Include a link to a bug report or enhancement request.
+Link the related issue and explain why this approach was chosen.
+
+## Validation
+
+List the checks you ran. Include screenshots or updated snapshots for TUI changes.
+
+## Checklist
+
+- [ ] The change is focused and documented.
+- [ ] Tests or validation cover the changed behavior.
+- [ ] No credentials, private prompts, or customer data are included.
+- [ ] Applicable Apache 2.0 copyright and attribution notices are preserved.

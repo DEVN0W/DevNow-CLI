@@ -1,0 +1,43 @@
+name: CLI bug
+description: Report a reproducible problem in DevNow Agent
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Search existing issues first and remove credentials, private prompts, and customer data from your report.
+  - type: input
+    id: revision
+    attributes:
+      label: Version or commit
+      description: Provide the DevNow version or Git commit you are running.
+    validations:
+      required: true
+  - type: input
+    id: provider
+    attributes:
+      label: Model provider
+      description: For example, OpenAI, Claude, Azure OpenAI, Azure AI Foundry, Ollama, or LM Studio. Never include an API key.
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and terminal
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true

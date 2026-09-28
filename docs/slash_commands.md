@@ -1,14 +1,10 @@
 # Slash commands
 
-For an overview of Codex CLI slash commands, see [this documentation](https://developers.openai.com/codex/cli/slash-commands).
+DevNow exposes interactive commands in the terminal composer. Important commands include:
 
-## DevNow mode commands
+- `/mode` selects Single AI, Multi-Agent, or Multi-Agent Strategic.
+- `/plan` switches planning behavior.
+- `/apps` lists available and connected apps.
+- `/models` selects an available model.
 
-- `/mode` opens the operating-mode picker for Single AI, manual Multi-Agent, and Multi-Agent Strategic.
-- `/collab` is a compatibility alias for `/mode`.
-- `/plan` enters Plan mode without adding a fourth top-level operating mode.
-
-Single AI is the startup default. Manual Multi-Agent requires a valid
-`CODEX_HOME/agentic.toml`; it never starts a child agent without an explicit
-agent tool call. Multi-Agent Strategic requires a valid
-`CODEX_HOME/multi_agent.toml` and automatically runs its configured workflow.
+Use `/mode` before a task when you want to change orchestration. In manual Multi-Agent mode, begin a prompt with `@agent-name` to dispatch a configured agent.

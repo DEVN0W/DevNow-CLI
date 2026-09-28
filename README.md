@@ -301,6 +301,6 @@ See [Contributing](docs/contributing.md) for the complete workflow. User configu
 
 ## Open-source project
 
-Bug reports, feature proposals, documentation improvements, and pull requests are welcome. Please read the [contribution guide](docs/contributing.md) and [security policy](SECURITY.md) before participating.
+Bug reports, feature proposals, documentation improvements, and pull requests are welcome. Please read the [contribution guide](docs/contributing.md), [Code of Conduct](CODE_OF_CONDUCT.md), and [security policy](SECURITY.md) before participating.
 
 DevNow Agent is licensed under the [Apache License 2.0](LICENSE). It was created from the open-source OpenAI Codex codebase and includes substantial DevNow-specific customization. Required original copyright and third-party attribution notices are retained in [NOTICE](NOTICE).

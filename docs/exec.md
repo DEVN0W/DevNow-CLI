@@ -1,3 +1,9 @@
 # Non-interactive mode
 
-For information about non-interactive mode, see [this documentation](https://developers.openai.com/codex/noninteractive).
+Use non-interactive mode for scripts and CI:
+
+```bash
+devnow exec "review this change and report blocking issues"
+```
+
+Pass a prompt as an argument or through standard input. Add `--ephemeral` when the session should not be persisted.

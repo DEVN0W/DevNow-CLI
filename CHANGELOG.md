@@ -1,1 +1,3 @@
-The changelog can be found on the [releases page](https://github.com/openai/codex/releases).
+# Changelog
+
+DevNow Agent release notes are published on the [GitHub Releases page](https://github.com/DEVN0W/DevNow-Agent/releases).

@@ -1,7 +1,7 @@
-# AGENTS.md
+# Project instructions with AGENTS.md
 
-For information about AGENTS.md, see [this documentation](https://developers.openai.com/codex/guides/agents-md).
+`AGENTS.md` files provide repository-specific instructions to DevNow Agent. Place one at the repository root for project-wide guidance, or add more in subdirectories for narrower rules.
 
-## Hierarchical agents message
+Instructions closer to a changed file take precedence over broader instructions. Keep them concrete: include build commands, style conventions, testing expectations, and files that must not be changed.
 
-When the `child_agents_md` feature flag is enabled (via `[features]` in `config.toml`), Codex appends additional guidance about AGENTS.md scope and precedence to the user instructions message and emits that message even when no AGENTS.md is present.
+When the `child_agents_md` feature is enabled, DevNow also explains instruction scope and precedence to delegated agents.

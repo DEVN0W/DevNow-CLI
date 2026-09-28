@@ -4,7 +4,7 @@
 header = """
 # Changelog
 
-You can install any of these versions: `npm install -g @openai/codex@<version>`
+DevNow Agent releases are published at https://github.com/DEVN0W/DevNow-Agent/releases.
 """
 
 body = """

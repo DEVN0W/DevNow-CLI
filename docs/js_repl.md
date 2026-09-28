@@ -99,21 +99,21 @@ Nested `codex.tool(...)` diagnostics are emitted through normal `tracing` output
 - `info` level logs a bounded summary.
 - `trace` level also logs the exact serialized response object or error string seen by JavaScript.
 
-For `codex app-server`, these logs are written to the server process `stderr`.
+For `devnow app-server`, these logs are written to the server process `stderr`.
 
 Examples:
 
 ```sh
 RUST_LOG=codex_core::tools::js_repl=info \
 LOG_FORMAT=json \
-codex app-server \
+devnow app-server \
 2> /tmp/codex-app-server.log
 ```
 
 ```sh
 RUST_LOG=codex_core::tools::js_repl=trace \
 LOG_FORMAT=json \
-codex app-server \
+devnow app-server \
 2> /tmp/codex-app-server.log
 ```
 

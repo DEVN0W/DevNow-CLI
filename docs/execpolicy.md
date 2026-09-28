@@ -1,3 +1,5 @@
 # Execution policy
 
-For an overview of execution policy rules, see [this documentation](https://developers.openai.com/codex/exec-policy).
+Execution policies control which commands DevNow may run automatically and which require approval. Start with `approval_policy = "on-request"` and `sandbox_mode = "workspace-write"` in `$CODEX_HOME/config.toml`.
+
+Treat permissive policies as security-sensitive. Never disable approvals or sandboxing unless DevNow is already running inside an isolated environment you control.

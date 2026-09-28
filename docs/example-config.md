@@ -1,10 +1,8 @@
 # Sample configuration
 
-For the main `config.toml` sample, see [this documentation](https://developers.openai.com/codex/config-sample).
-
-If you do not set a custom provider, Codex uses the built-in `openai` provider.
+If you do not set a custom provider, DevNow uses the built-in `openai` provider.
 That is the “vanilla” path.
-If you want Azure OpenAI or another compatible backend, add a provider block to `~/.codex/config.toml`.
+If you want Azure OpenAI or another compatible backend, add a provider block to `$CODEX_HOME/config.toml`.
 
 ```toml
 [model_providers.azure-openai]
@@ -34,7 +32,7 @@ model_provider = "azure-openai"
 To switch later, just add another entry under `[model_providers.*]` and update
 `model_provider` in the profile you want to use.
 For Foundry, use the project endpoint plus the provider `extra_body` shown
-above so Codex can add the `agent_reference` payload on that provider only.
+above so DevNow can add the `agent_reference` payload on that provider only.
 
 For Manual Multi-Agent mode, copy `docs/agentic.sample.toml` to
 `CODEX_HOME/agentic.toml`. Its `developer` entry is the default agent and uses

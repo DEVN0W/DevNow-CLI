@@ -1,3 +1,9 @@
-# Getting started with Codex CLI
+# Getting started with DevNow Agent
 
-For an overview of Codex CLI features, see [this documentation](https://developers.openai.com/codex/cli/features#running-in-interactive-mode).
+Follow the [installation and configuration walkthrough](../README.md#install-from-source), then open the project you want DevNow to work on and run:
+
+```bash
+devnow
+```
+
+Use `/mode` to choose Single AI, Multi-Agent, or Multi-Agent Strategic. See [configuration](config.md) for provider and team settings.

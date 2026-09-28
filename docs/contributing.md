@@ -2,6 +2,8 @@
 
 Thanks for helping improve DevNow Agent. Bug reports, feature proposals, documentation changes, tests, and code contributions are welcome.
 
+Participation is governed by the project [Code of Conduct](../CODE_OF_CONDUCT.md).
+
 ## Before you start
 
 1. Search the [issues](https://github.com/DEVN0W/DevNow-Agent/issues) to avoid duplicates.
