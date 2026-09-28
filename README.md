@@ -14,6 +14,8 @@
 
 DevNow Agent works inside your local project, can edit and run code, and supports three operating modes: **Single AI**, **Multi-Agent**, and **Multi-Agent Strategic**. It is designed for developers who want a configurable agent experience that can use different model providers and specialized agent teams.
 
+DevNow Agent was created from the open-source code of [OpenAI Codex](https://github.com/openai/codex) and has been independently customized with DevNow branding, BYOAI provider support, and DevNow's multi-agent workflows. DevNow Agent is not presented as an official OpenAI product; the original copyright and attribution notices are retained in [NOTICE](NOTICE).
+
 ![DevNow Agent terminal preview](assets/devnow-classic-hero-cli-preview.png)
 
 ## Highlights
@@ -22,9 +24,23 @@ DevNow Agent works inside your local project, can edit and run code, and support
 - Single-agent mode for focused tasks
 - Manual multi-agent delegation with `@agent-name`
 - Strategic multi-agent workflows with configurable routing and review loops
-- Configurable model providers, models, sandboxing, and approval policies
+- Bring Your Own AI (BYOAI) with Claude, OpenAI, Azure OpenAI, Azure AI Foundry, compatible endpoints, or local Ollama models
+- Configurable models, sandboxing, and approval policies
 - MCP server support and non-interactive execution
 - Open-source under the Apache License 2.0
+
+## Bring Your Own AI (BYOAI)
+
+DevNow does not lock your agents to one AI provider. A single installation can use different providers for different agents:
+
+- **Claude** through the DevNow gateway
+- **OpenAI** and OpenAI-compatible APIs
+- **Azure OpenAI** deployments
+- **Azure AI Foundry** projects and agents
+- **Ollama** for local or private AI deployments
+- **LM Studio** for locally hosted models
+
+For organizations that need a private AI environment, DevNow can connect to models hosted through Ollama so prompts and model traffic remain within infrastructure you control. A licensed private-AI deployment can be provided when required. The models you select remain subject to their respective provider and model licenses.
 
 ## Requirements
 
@@ -155,6 +171,41 @@ query_params = { api-version = "YOUR_SUPPORTED_API_VERSION" }
 
 Set `AZURE_OPENAI_API_KEY` in your environment before starting DevNow. Model names, endpoints, and API versions must match the provider account you use.
 
+Azure AI Foundry example:
+
+```toml
+model = "YOUR_MODEL_OR_AGENT_NAME"
+model_provider = "azure-foundry"
+
+[model_providers.azure-foundry]
+name = "Azure AI Foundry"
+base_url = "https://YOUR-PROJECT-ENDPOINT/api/projects/YOUR-PROJECT/openai/v1"
+env_key = "AZURE_FOUNDRY_API_KEY"
+wire_api = "responses"
+```
+
+For a Foundry agent, add the provider-specific reference required by your project:
+
+```toml
+extra_body = { agent_reference = { name = "YOUR-AGENT", version = "YOUR-VERSION", type = "agent_reference" } }
+```
+
+Claude example:
+
+```toml
+model = "YOUR_CLAUDE_MODEL"
+model_provider = "claude"
+```
+
+Set `DEVNOW_CLAUDE_API_KEY` before starting DevNow. You can optionally set `DEVNOW_CLAUDE_BASE_URL` when using a compatible managed endpoint.
+
+For private or local AI with Ollama, start Ollama and launch DevNow in local-model mode:
+
+```bash
+ollama serve
+devnow --oss --local-provider ollama
+```
+
 ### 6. Start DevNow
 
 Open the project you want the agent to work on and run:
@@ -253,4 +304,4 @@ See [Contributing](docs/contributing.md) for the complete workflow. User configu
 
 Bug reports, feature proposals, documentation improvements, and pull requests are welcome. Please read the [contribution guide](docs/contributing.md) and [security policy](SECURITY.md) before participating.
 
-DevNow Agent is licensed under the [Apache License 2.0](LICENSE). This project is derived from open-source software; required copyright and third-party attribution notices are retained in [NOTICE](NOTICE).
+DevNow Agent is licensed under the [Apache License 2.0](LICENSE). It was created from the open-source OpenAI Codex codebase and includes substantial DevNow-specific customization. Required original copyright and third-party attribution notices are retained in [NOTICE](NOTICE).
