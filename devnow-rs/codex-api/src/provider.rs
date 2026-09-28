@@ -158,7 +158,7 @@ mod tests {
         let negative_cases = [
             "https://api.openai.com/v1",
             "https://example.com/openai",
-            "https://myproxy.azurewebsites.net/openai",
+            "https://example.azurewebsites.net/openai",
         ];
 
         for base_url in negative_cases {

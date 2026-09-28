@@ -1,0 +1,16 @@
+# Copy this file to `CODEX_HOME/config.toml` for Single AI mode.
+# Replace placeholder values with a model and provider available to you.
+# Keep API keys in environment variables; never write credentials in this file.
+
+model = "YOUR_MODEL_NAME"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+# To use a compatible custom provider, uncomment this line and the block below.
+# model_provider = "my-provider"
+
+# [model_providers.my-provider]
+# name = "My Provider"
+# base_url = "https://YOUR-ENDPOINT.example/v1"
+# env_key = "DEVNOW_API_KEY"
+# wire_api = "responses"

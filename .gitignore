@@ -14,6 +14,8 @@ user.bazelrc
 build/
 out/
 storybook-static/
+**/target/
+**/target-*/
 
 # ignore README for publishing
 devnow-cli/README.md
@@ -52,6 +54,24 @@ yarn-error.log*
 # env
 .env*
 !.env.example
+
+# local DevNow configuration and credentials
+/.devnow/
+/.codex/
+/config.toml
+/agentic.toml
+/multi_agent.toml
+/auth.json
+/*.local.toml
+
+# generated local workspaces and temporary output
+**/.tmp/
+**/.tmp-*/
+**/.tmp_*/
+**/.codex_tmp/
+**/.pos_build/
+*.profraw
+*.profdata
 
 # package
 *.tgz

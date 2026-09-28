@@ -53,7 +53,7 @@ name = "Azure Foundry"
 base_url = "https://<your-foundry-project-endpoint>/api/projects/<project-name>/openai/v1"
 env_key = "AZURE_FOUNDRY_API_KEY"
 wire_api = "responses"
-extra_body = { agent_reference = { name = "emea-swd-multi-agent-ai", version = "2", type = "agent_reference" } }
+extra_body = { agent_reference = { name = "YOUR-FOUNDRY-AGENT", version = "YOUR-VERSION", type = "agent_reference" } }
 
 [profiles.default]
 model_provider = "azure-foundry"

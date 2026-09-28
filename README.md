@@ -232,6 +232,22 @@ Use `/mode` inside the terminal UI to select a workflow. `/plan` remains availab
 
 Single AI is the default. It uses the model and provider from `$CODEX_HOME/config.toml`; no additional roster file is required.
 
+Start from the included credential-free sample:
+
+macOS or Linux:
+
+```bash
+cp ../docs/single-ai.sample.toml "$CODEX_HOME/config.toml"
+```
+
+Windows PowerShell, when run from `devnow-rs`:
+
+```powershell
+Copy-Item ..\docs\single-ai.sample.toml "$env:CODEX_HOME\config.toml"
+```
+
+Replace `YOUR_MODEL_NAME` and optionally configure a provider as described above.
+
 ### Multi-Agent
 
 Multi-Agent gives you manual control over a team. Copy the included sample roster:
@@ -297,10 +313,10 @@ just fmt
 just argument-comment-lint
 ```
 
-See [Contributing](docs/contributing.md) for the complete workflow. User configuration examples are available in [docs/config.md](docs/config.md), [docs/agentic.sample.toml](docs/agentic.sample.toml), and [docs/multi-agent.sample.toml](docs/multi-agent.sample.toml).
+See [Contributing](docs/contributing.md) for the complete workflow. User configuration examples are available in [docs/config.md](docs/config.md), [Single AI](docs/single-ai.sample.toml), [Multi-Agent](docs/agentic.sample.toml), and [Multi-Agent Strategic](docs/multi-agent.sample.toml).
 
 ## Open-source project
 
-Bug reports, feature proposals, documentation improvements, and pull requests are welcome. Please read the [contribution guide](docs/contributing.md), [Code of Conduct](CODE_OF_CONDUCT.md), and [security policy](SECURITY.md) before participating.
+Bug reports, feature proposals, documentation improvements, and pull requests are welcome. Please read the [contribution guide](docs/contributing.md), [Code of Conduct](CODE_OF_CONDUCT.md), [support guide](SUPPORT.md), and [security policy](SECURITY.md) before participating. Maintainers can use the [open-source release checklist](OPEN_SOURCE.md) before publishing a release.
 
 DevNow Agent is licensed under the [Apache License 2.0](LICENSE). It was created from the open-source OpenAI Codex codebase and includes substantial DevNow-specific customization. Required original copyright and third-party attribution notices are retained in [NOTICE](NOTICE).

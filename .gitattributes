@@ -1,0 +1,27 @@
+# Normalize text files across Windows, macOS, and Linux.
+* text=auto
+
+.gitattributes text eol=lf
+.gitignore text eol=lf
+*.bat text eol=crlf
+*.bat.tpl text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.sh text eol=lf
+*.rs text eol=lf
+*.toml text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.jsonc text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Binary assets must not be modified by line-ending conversion.
+*.gif binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.woff binary
+*.woff2 binary
