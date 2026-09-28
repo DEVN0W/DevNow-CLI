@@ -286,10 +286,6 @@ Update the model/provider values, restart DevNow, and choose **Multi-Agent Strat
 
 ![DevNow Agent terminal experience](assets/devnow-classic-hero-cli-preview.png)
 
-### Brand system
-
-![DevNow Agent pixel helmet concepts](assets/devnow-helmet-concepts.png)
-
 ## Development
 
 From `devnow-rs`:
