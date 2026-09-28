@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/devnow-cli-branding-preview.png" alt="DevNow Agent" width="736" />
+  <img src="assets/devnow-classic-hero-banner.png" alt="DevNow Agent" width="736" />
 </p>
 
 <p align="center">
@@ -16,8 +16,6 @@
 DevNow Agent works inside your local project, can edit and run code, and supports three operating modes: **Single AI**, **Multi-Agent**, and **Multi-Agent Strategic**. It is designed for developers who want a configurable agent experience that can use different model providers and specialized agent teams.
 
 DevNow Agent was created from the open-source code of [OpenAI Codex](https://github.com/openai/codex) and has been independently customized with DevNow branding, BYOAI provider support, and DevNow's multi-agent workflows. DevNow Agent is not presented as an official OpenAI product; the original copyright and attribution notices are retained in [NOTICE](NOTICE).
-
-![DevNow Agent terminal preview](assets/devnow-classic-hero-cli-preview.png)
 
 ## Highlights
 
