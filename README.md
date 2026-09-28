@@ -1,60 +1,256 @@
-<p align="center"><code>npm i -g @openai/codex</code><br />or <code>brew install --cask codex</code></p>
-<p align="center"><strong>Codex CLI</strong> is a coding agent from OpenAI that runs locally on your computer.
 <p align="center">
-  <img src="https://github.com/openai/codex/blob/main/.github/codex-cli-splash.png" alt="Codex CLI splash" width="80%" />
+  <img src="assets/devnow-cli-branding-preview.png" alt="DevNow Agent" width="736" />
 </p>
-</br>
-If you want Codex in your code editor (VS Code, Cursor, Windsurf), <a href="https://developers.openai.com/codex/ide">install in your IDE.</a>
-</br>If you want the desktop app experience, run <code>codex app</code> or visit <a href="https://chatgpt.com/codex?app-landing-page=true">the Codex App page</a>.
-</br>If you are looking for the <em>cloud-based agent</em> from OpenAI, <strong>Codex Web</strong>, go to <a href="https://chatgpt.com/codex">chatgpt.com/codex</a>.</p>
 
----
+<p align="center">
+  An open-source, terminal-first AI software engineering agent with single-agent and multi-agent workflows.
+</p>
 
-## Quickstart
+<p align="center">
+  <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-7fc8f8.svg" /></a>
+  <a href="https://github.com/DEVN0W/DevNow-Agent/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/DEVN0W/DevNow-Agent" /></a>
+  <a href="https://github.com/DEVN0W/DevNow-Agent/pulls"><img alt="Pull requests welcome" src="https://img.shields.io/badge/PRs-welcome-7fc8f8.svg" /></a>
+</p>
 
-### Installing and running Codex CLI
+DevNow Agent works inside your local project, can edit and run code, and supports three operating modes: **Single AI**, **Multi-Agent**, and **Multi-Agent Strategic**. It is designed for developers who want a configurable agent experience that can use different model providers and specialized agent teams.
 
-Install globally with your preferred package manager:
+![DevNow Agent terminal preview](assets/devnow-classic-hero-cli-preview.png)
 
-```shell
-# Install using npm
-npm install -g @openai/codex
+## Highlights
+
+- A branded terminal UI built for day-to-day development work
+- Single-agent mode for focused tasks
+- Manual multi-agent delegation with `@agent-name`
+- Strategic multi-agent workflows with configurable routing and review loops
+- Configurable model providers, models, sandboxing, and approval policies
+- MCP server support and non-interactive execution
+- Open-source under the Apache License 2.0
+
+## Requirements
+
+- Git 2.23 or newer
+- Rust stable, including Cargo, `rustfmt`, and Clippy
+- 4 GB RAM minimum; 8 GB recommended
+- macOS 12+, Ubuntu 20.04+/Debian 10+, or Windows 11
+
+On Windows, PowerShell can build the project natively. WSL2 is recommended when you want a Linux development environment.
+
+## Install from source
+
+### 1. Clone the project
+
+```bash
+git clone --branch master https://github.com/DEVN0W/DevNow-Agent.git
+cd DevNow-Agent/devnow-rs
 ```
 
-```shell
-# Install using Homebrew
-brew install --cask codex
+### 2. Install Rust
+
+Install Rust with [rustup](https://rustup.rs/), then add the required components:
+
+```bash
+rustup component add rustfmt clippy
 ```
 
-Then simply run `codex` to get started.
+### 3. Build a release binary
 
-<details>
-<summary>You can also go to the <a href="https://github.com/openai/codex/releases/latest">latest GitHub Release</a> and download the appropriate binary for your platform.</summary>
+```bash
+cargo build --release --bin codex
+```
 
-Each GitHub Release contains many executables, but in practice, you likely want one of these:
+The Rust workspace currently produces an internal binary named `codex`. Install that artifact under the public `devnow` command:
 
-- macOS
-  - Apple Silicon/arm64: `codex-aarch64-apple-darwin.tar.gz`
-  - x86_64 (older Mac hardware): `codex-x86_64-apple-darwin.tar.gz`
-- Linux
-  - x86_64: `codex-x86_64-unknown-linux-musl.tar.gz`
-  - arm64: `codex-aarch64-unknown-linux-musl.tar.gz`
+macOS or Linux:
 
-Each archive contains a single entry with the platform baked into the name (e.g., `codex-x86_64-unknown-linux-musl`), so you likely want to rename it to `codex` after extracting it.
+```bash
+mkdir -p "$HOME/.local/bin"
+cp target/release/codex "$HOME/.local/bin/devnow"
+chmod +x "$HOME/.local/bin/devnow"
+export PATH="$HOME/.local/bin:$PATH"
+```
 
-</details>
+Windows PowerShell:
 
-### Using Codex with your ChatGPT plan
+```powershell
+$devNowBin = "$env:LOCALAPPDATA\DevNow\bin"
+New-Item -ItemType Directory -Force $devNowBin | Out-Null
+Copy-Item .\target\release\codex.exe "$devNowBin\devnow.exe"
+$env:Path = "$devNowBin;$env:Path"
+```
 
-Run `codex` and select **Sign in with ChatGPT**. We recommend signing into your ChatGPT account to use Codex as part of your Plus, Pro, Team, Edu, or Enterprise plan. [Learn more about what's included in your ChatGPT plan](https://help.openai.com/en/articles/11369540-codex-in-chatgpt).
+Add the chosen binary directory to your shell profile or user `PATH` to keep the `devnow` command available after restarting the terminal.
 
-You can also use Codex with an API key, but this requires [additional setup](https://developers.openai.com/codex/auth#sign-in-with-an-api-key).
+### 4. Create a DevNow configuration directory
 
-## Docs
+DevNow supports a custom configuration home through `CODEX_HOME`. Set it to a DevNow-owned directory so your settings stay separate from other tools.
 
-- [**Codex Documentation**](https://developers.openai.com/codex)
-- [**Contributing**](./docs/contributing.md)
-- [**Installing & building**](./docs/install.md)
-- [**Open source fund**](./docs/open-source-fund.md)
+macOS or Linux:
 
-This repository is licensed under the [Apache-2.0 License](LICENSE).
+```bash
+export CODEX_HOME="$HOME/.devnow"
+mkdir -p "$CODEX_HOME"
+```
+
+Windows PowerShell:
+
+```powershell
+$env:CODEX_HOME = "$HOME\.devnow"
+New-Item -ItemType Directory -Force $env:CODEX_HOME | Out-Null
+```
+
+Persist `CODEX_HOME` in your shell profile or operating-system environment variables if you want to use the same location in future sessions.
+
+### 5. Configure a model provider
+
+Create `$CODEX_HOME/config.toml`. Never commit real API keys; store credentials in environment variables.
+
+Basic configuration:
+
+```toml
+model = "YOUR_MODEL_NAME"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+```
+
+For an OpenAI-compatible endpoint, add a provider:
+
+```toml
+model = "YOUR_MODEL_NAME"
+model_provider = "my-provider"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[model_providers.my-provider]
+name = "My Provider"
+base_url = "https://YOUR-ENDPOINT.example/v1"
+env_key = "DEVNOW_API_KEY"
+wire_api = "responses"
+```
+
+Then set the credential in your terminal:
+
+```bash
+export DEVNOW_API_KEY="your-api-key"
+```
+
+Windows PowerShell:
+
+```powershell
+$env:DEVNOW_API_KEY = "your-api-key"
+```
+
+Azure OpenAI example:
+
+```toml
+model = "YOUR_AZURE_DEPLOYMENT_NAME"
+model_provider = "azure-openai"
+
+[model_providers.azure-openai]
+name = "Azure OpenAI"
+base_url = "https://YOUR-RESOURCE.openai.azure.com/openai"
+env_key = "AZURE_OPENAI_API_KEY"
+wire_api = "responses"
+query_params = { api-version = "YOUR_SUPPORTED_API_VERSION" }
+```
+
+Set `AZURE_OPENAI_API_KEY` in your environment before starting DevNow. Model names, endpoints, and API versions must match the provider account you use.
+
+### 6. Start DevNow
+
+Open the project you want the agent to work on and run:
+
+```bash
+cd /path/to/your/project
+devnow
+```
+
+Or start with an initial request:
+
+```bash
+devnow "explain this project and suggest the first improvement"
+```
+
+## Configure operating modes
+
+Use `/mode` inside the terminal UI to select a workflow. `/plan` remains available for planning within any mode.
+
+### Single AI
+
+Single AI is the default. It uses the model and provider from `$CODEX_HOME/config.toml`; no additional roster file is required.
+
+### Multi-Agent
+
+Multi-Agent gives you manual control over a team. Copy the included sample roster:
+
+macOS or Linux:
+
+```bash
+cp ../docs/agentic.sample.toml "$CODEX_HOME/agentic.toml"
+```
+
+Windows PowerShell, when run from `devnow-rs`:
+
+```powershell
+Copy-Item ..\docs\agentic.sample.toml "$env:CODEX_HOME\agentic.toml"
+```
+
+Edit each agent's `model` and `model_provider` to match your configuration. Select **Multi-Agent** with `/mode`, then address an agent at the beginning of a prompt:
+
+```text
+@developer implement the requested API and add focused tests
+```
+
+Multiple leading mentions can dispatch independent assignments:
+
+```text
+@principal-architect @developer review the design and implementation in parallel
+```
+
+### Multi-Agent Strategic
+
+Strategic mode runs an automatic workflow containing roles such as architect, planner, developer, critic, security, quality, execution, and judge.
+
+Copy the strategic sample:
+
+macOS or Linux:
+
+```bash
+cp ../docs/multi-agent.sample.toml "$CODEX_HOME/multi_agent.toml"
+```
+
+Windows PowerShell, when run from `devnow-rs`:
+
+```powershell
+Copy-Item ..\docs\multi-agent.sample.toml "$env:CODEX_HOME\multi_agent.toml"
+```
+
+Update the model/provider values, restart DevNow, and choose **Multi-Agent Strategic** from `/mode`.
+
+## Screenshots
+
+### Terminal experience
+
+![DevNow Agent terminal experience](assets/devnow-classic-hero-cli-preview.png)
+
+### Brand system
+
+![DevNow Agent pixel helmet concepts](assets/devnow-helmet-concepts.png)
+
+## Development
+
+From `devnow-rs`:
+
+```bash
+cargo test -p codex-tui
+cargo test -p codex-tui-app-server
+just fmt
+just argument-comment-lint
+```
+
+See [Contributing](docs/contributing.md) for the complete workflow. User configuration examples are available in [docs/config.md](docs/config.md), [docs/agentic.sample.toml](docs/agentic.sample.toml), and [docs/multi-agent.sample.toml](docs/multi-agent.sample.toml).
+
+## Open-source project
+
+Bug reports, feature proposals, documentation improvements, and pull requests are welcome. Please read the [contribution guide](docs/contributing.md) and [security policy](SECURITY.md) before participating.
+
+DevNow Agent is licensed under the [Apache License 2.0](LICENSE). This project is derived from open-source software; required copyright and third-party attribution notices are retained in [NOTICE](NOTICE).

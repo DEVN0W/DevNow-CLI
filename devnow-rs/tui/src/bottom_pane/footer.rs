@@ -123,11 +123,15 @@ impl CollaborationModeIndicator {
     fn styled_span(self, show_cycle_hint: bool) -> Span<'static> {
         let label = self.label(show_cycle_hint);
         match self {
-            CollaborationModeIndicator::Plan => Span::from(label).magenta(),
-            CollaborationModeIndicator::Agentic => Span::from(label).cyan(),
-            CollaborationModeIndicator::MultiAgent => Span::from(label).yellow(),
-            CollaborationModeIndicator::PairProgramming => Span::from(label).cyan(),
-            CollaborationModeIndicator::Execute => Span::from(label).dim(),
+            CollaborationModeIndicator::Plan
+            | CollaborationModeIndicator::Agentic
+            | CollaborationModeIndicator::MultiAgent
+            | CollaborationModeIndicator::PairProgramming => {
+                Span::from(label).fg(crate::branding::ACCENT).bold()
+            }
+            CollaborationModeIndicator::Execute => {
+                Span::from(label).fg(crate::branding::TEXT).dim()
+            }
         }
     }
 }
@@ -224,6 +228,7 @@ pub(crate) fn render_footer_line(area: Rect, buf: &mut Buffer, line: Line<'stati
         " ".repeat(FOOTER_INDENT_COLS).into(),
         " ".repeat(FOOTER_INDENT_COLS).into(),
     ))
+    .style(crate::branding::footer_style())
     .render(area, buf);
 }
 
@@ -254,6 +259,7 @@ pub(crate) fn render_footer_from_props(
         " ".repeat(FOOTER_INDENT_COLS).into(),
         " ".repeat(FOOTER_INDENT_COLS).into(),
     ))
+    .style(crate::branding::footer_style())
     .render(area, buf);
 }
 
@@ -556,7 +562,11 @@ pub(crate) fn render_context_right(area: Rect, buf: &mut Buffer, line: &Line<'st
         }
         let remaining = max_x.saturating_sub(x);
         let draw_width = span_width.min(remaining);
-        buf.set_span(x, y, span, draw_width);
+        let style = crate::branding::footer_style()
+            .patch(line.style)
+            .patch(span.style);
+        let styled_span = Span::styled(span.content.clone(), style);
+        buf.set_span(x, y, &styled_span, draw_width);
         x = x.saturating_add(span_width);
     }
 }
@@ -574,7 +584,9 @@ pub(crate) fn render_footer_hint_items(area: Rect, buf: &mut Buffer, items: &[(S
         return;
     }
 
-    footer_hint_items_line(items).render(inset_footer_hint_area(area), buf);
+    footer_hint_items_line(items)
+        .style(crate::branding::footer_style())
+        .render(inset_footer_hint_area(area), buf);
 }
 
 /// Map `FooterProps` to footer lines without width-based collapse.
@@ -1077,6 +1089,32 @@ mod tests {
 
     fn snapshot_footer(name: &str, props: FooterProps) {
         snapshot_footer_with_mode_indicator(name, 80, &props, None);
+    }
+
+    #[test]
+    fn classic_hero_footer_palette() {
+        let area = Rect::new(0, 0, 48, 1);
+        let mut buffer = Buffer::empty(area);
+        let line = Line::from(vec![
+            "Ready  ".into(),
+            CollaborationModeIndicator::Plan.styled_span(/*show_cycle_hint*/ false),
+        ]);
+        render_footer_line(area, &mut buffer, line);
+        render_context_right(area, &mut buffer, &Line::from("80% context left"));
+        let context = buffer.content.iter().find(|cell| cell.symbol() == "8").unwrap();
+        let palette = format!(
+            "mode: {:?}\ntext: {:?}\ncontext: {:?}\nbackground: {:?}",
+            buffer[(9, 0)].fg,
+            buffer[(2, 0)].fg,
+            context.fg,
+            context.bg,
+        );
+        assert_snapshot!(palette, @r###"
+        mode: Rgb(135, 206, 250)
+        text: Rgb(224, 244, 255)
+        context: Rgb(224, 244, 255)
+        background: Black
+        "###);
     }
 
     fn draw_footer_frame<B: Backend>(

@@ -472,16 +472,6 @@ fn emit_project_config_warnings(app_event_tx: &AppEventSender, config: &Config) 
     )));
 }
 
-fn emit_system_bwrap_warning(app_event_tx: &AppEventSender) {
-    let Some(message) = codex_core::config::system_bwrap_warning() else {
-        return;
-    };
-
-    app_event_tx.send(AppEvent::InsertHistoryCell(Box::new(
-        history_cell::new_warning_event(message),
-    )));
-}
-
 async fn emit_custom_prompt_deprecation_notice(app_event_tx: &AppEventSender, codex_home: &Path) {
     let prompts_dir = codex_home.join("prompts");
     let prompt_count = codex_core::custom_prompts::discover_prompts_in(&prompts_dir)
@@ -2352,7 +2342,6 @@ impl App {
         let (app_event_tx, mut app_event_rx) = unbounded_channel();
         let app_event_tx = AppEventSender::new(app_event_tx);
         emit_project_config_warnings(&app_event_tx, &config);
-        emit_system_bwrap_warning(&app_event_tx);
         emit_custom_prompt_deprecation_notice(&app_event_tx, &config.codex_home).await;
         tui.set_notification_method(config.tui_notification_method);
 

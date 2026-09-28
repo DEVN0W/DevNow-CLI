@@ -158,7 +158,7 @@ where
             .spans
             .iter()
             .map(|s| Span {
-                style: s.style.patch(line.style),
+                style: line.style.patch(s.style),
                 content: s.content.clone(),
             })
             .collect();
@@ -334,6 +334,7 @@ mod tests {
     use super::*;
     use crate::markdown_render::render_markdown_text;
     use crate::test_backend::VT100Backend;
+    use pretty_assertions::assert_eq;
     use ratatui::layout::Rect;
     use ratatui::style::Color;
 
@@ -363,6 +364,65 @@ mod tests {
             String::from_utf8(actual).unwrap(),
             String::from_utf8(expected).unwrap()
         );
+    }
+
+    #[test]
+    fn vt100_classic_hero_preserves_pixel_colors_over_line_defaults() {
+        let width = 56;
+        let height = 16;
+        let backend = VT100Backend::new(width, height);
+        let mut terminal = crate::custom_terminal::Terminal::with_options(backend).expect("terminal");
+        terminal.set_viewport_area(Rect::new(/*x*/ 0, height - 1, width, /*height*/ 1));
+        insert_history_lines(&mut terminal, crate::branding::brand_lines(usize::from(width)))
+            .expect("insert hero header");
+
+        let screen = terminal.backend().vt100().screen();
+        let hero_rows = (0..height)
+            .filter(|row| screen.cell(*row, 0).is_some_and(|cell| cell.contents() == "\u{2580}"))
+            .collect::<Vec<_>>();
+        assert_eq!(hero_rows.len(), 9);
+        let pixels = hero_rows
+            .into_iter()
+            .flat_map(|row| {
+                (0..2).map(move |half| {
+                    (0..20)
+                        .map(|column| {
+                            let cell = screen.cell(row, column).expect("hero pixel");
+                            let color = if half == 0 { cell.fgcolor() } else { cell.bgcolor() };
+                            match color {
+                                vt100::Color::Rgb(135, 206, 250) => 'B',
+                                vt100::Color::Rgb(185, 230, 255) => 'H',
+                                vt100::Color::Rgb(67, 137, 176) => 'S',
+                                vt100::Color::Rgb(224, 244, 255) => 'F',
+                                vt100::Color::Idx(0) => '.',
+                                other => panic!("unexpected rendered hero color: {other:?}"),
+                            }
+                        })
+                        .collect::<String>()
+                })
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        insta::assert_snapshot!(pixels, @r###"
+        .......BBBBBB.......
+        .....BBBBHHBBBB.....
+        ....BBBBBHHBBBBB....
+        ...BBBBBBHHBBBBBB...
+        ...BBBBBBBBBBBBBB...
+        ..SSBBBBBBBBBBBBSS..
+        ..SSBBFFFFFFFFBBSS..
+        ..SSBFF..FF..FFBSS..
+        ..SSBFF..FF..FFBSS..
+        ...BBFFFFFFFFFFBB...
+        ....BBFFFFFFFFBB....
+        .....BBFF..FFBB.....
+        ......BBFFFFBB......
+        .......BBBBBB.......
+        ......SSFFFFSS......
+        ....BBBBBBBBBBBB....
+        ...BBBHHBBBBHHBBB...
+        ..BBBHHBBBBBBHHBBB..
+        "###);
     }
 
     #[test]

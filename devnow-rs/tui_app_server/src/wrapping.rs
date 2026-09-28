@@ -680,7 +680,10 @@ where
             &mut sliced
                 .spans
                 .into_iter()
-                .map(|s| s.patch_style(line.style))
+                .map(|s| {
+                    let style = line.style.patch(s.style);
+                    s.style(style)
+                })
                 .collect(),
         );
         first_line.spans = spans;
@@ -708,7 +711,10 @@ where
             &mut sliced
                 .spans
                 .into_iter()
-                .map(|s| s.patch_style(line.style))
+                .map(|s| {
+                    let style = line.style.patch(s.style);
+                    s.style(style)
+                })
                 .collect(),
         );
         subsequent_line.spans = spans;
@@ -925,6 +931,21 @@ mod tests {
         assert_eq!(concat_line(&out[1]), "world");
         assert_eq!(out[1].spans.len(), 1);
         assert_eq!(out[1].spans[0].style.fg, None);
+    }
+
+    #[test]
+    fn span_colors_override_line_defaults() {
+        let line = Line::from(vec!["▀".fg(Color::Cyan).bg(Color::White), "x".into()])
+            .fg(Color::Blue)
+            .bg(Color::Black);
+        let out = word_wrap_line(&line, 10);
+        assert_eq!(
+            out[0].spans,
+            vec![
+                "▀".fg(Color::Cyan).bg(Color::White),
+                "x".fg(Color::Blue).bg(Color::Black),
+            ]
+        );
     }
 
     #[test]

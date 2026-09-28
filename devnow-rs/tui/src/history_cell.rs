@@ -10,6 +10,7 @@
 //! bumps the active-cell revision tracked by `ChatWidget`, so the cache key changes whenever the
 //! rendered transcript output can change.
 
+use crate::branding::brand_lines as devnow_brand_lines;
 use crate::diff_render::create_diff_summary;
 use crate::diff_render::display_path_for;
 use crate::exec_cell::CommandOutput;
@@ -459,12 +460,21 @@ impl HistoryCell for AgentMessageCell {
             &self.lines,
             RtOptions::new(width as usize)
                 .initial_indent(if self.is_first_line {
-                    "assistant ".green().into()
+                    "assistant ".fg(crate::branding::ACCENT).bold().into()
                 } else {
                     "  ".into()
                 })
                 .subsequent_indent("          ".into()),
         )
+        .into_iter()
+        .map(|mut line| {
+            line.style = Style::default()
+                .fg(crate::branding::TEXT)
+                .bg(Color::Black)
+                .patch(line.style);
+            line
+        })
+        .collect()
     }
 
     fn is_stream_continuation(&self) -> bool {
@@ -1300,12 +1310,6 @@ impl SessionHeaderHistoryCell {
     }
 }
 
-const DEVNOW_BRAND_ACCENT: Color = Color::Rgb(0xEE, 0x44, 0x37);
-const DEVNOW_ROBOT_ORANGE: Color = Color::Indexed(208);
-const DEVNOW_ROBOT_RED: Color = Color::Indexed(160);
-const DEVNOW_BRAND_NARROW_MIN_WIDTH: usize = 15;
-const DEVNOW_ROBOT_MIN_WIDTH: usize = 28;
-
 /// Truncate `s` to at most `max_width` display columns, measured with
 /// [`UnicodeWidthStr`]/[`UnicodeWidthChar`] rather than byte length.
 fn truncate_to_width(s: &str, max_width: usize) -> String {
@@ -1329,62 +1333,7 @@ fn role_line(label: &str, body: &str, inner_width: usize) -> Line<'static> {
     let label = truncate_to_width(label, inner_width);
     let remaining = inner_width.saturating_sub(UnicodeWidthStr::width(label.as_str()));
     let body = truncate_to_width(body, remaining);
-    Line::from(vec![label.green(), body.fg(Color::Gray)])
-}
-
-fn fading_divider(inner_width: usize) -> Line<'static> {
-    let spans = (0..inner_width)
-        .map(|index| {
-            let remaining = inner_width.saturating_sub(index);
-            let red = (u16::from(0xEE_u8) * remaining as u16 / inner_width.max(1) as u16) as u8;
-            let green = (u16::from(0x44_u8) * remaining as u16 / inner_width.max(1) as u16) as u8;
-            let blue = (u16::from(0x37_u8) * remaining as u16 / inner_width.max(1) as u16) as u8;
-            "─".fg(Color::Rgb(red, green, blue))
-        })
-        .collect::<Vec<_>>();
-    Line::from(spans).style(Style::default().bg(Color::Black))
-}
-
-fn devnow_brand_lines(inner_width: usize) -> Vec<Line<'static>> {
-    if inner_width < DEVNOW_BRAND_NARROW_MIN_WIDTH {
-        let word = truncate_to_width("DEVNOW", inner_width);
-        return vec![Line::from(word).bold().fg(Color::Gray)];
-    }
-
-    let mut lines = if inner_width >= DEVNOW_ROBOT_MIN_WIDTH {
-        vec![
-            Line::from(vec![
-                "   ▄█▄   ".fg(DEVNOW_ROBOT_ORANGE),
-                "  ".into(),
-                "DEVNOW".bold().fg(Color::Gray),
-            ]),
-            Line::from(vec![
-                " ▄█████▄ ".fg(DEVNOW_BRAND_ACCENT),
-                "  ".into(),
-                "D E V N O W".fg(DEVNOW_BRAND_ACCENT),
-            ]),
-            Line::from(vec![
-                "██ ".fg(DEVNOW_ROBOT_RED),
-                "▀".fg(DEVNOW_ROBOT_ORANGE),
-                " ".into(),
-                "▀".fg(DEVNOW_ROBOT_ORANGE),
-                " ██".fg(DEVNOW_ROBOT_RED),
-                "  ".into(),
-                "TERMINAL AI AGENT".dim(),
-            ]),
-            Line::from(" ▀█████▀ ".fg(DEVNOW_ROBOT_RED)),
-        ]
-    } else {
-        vec![
-            Line::from(truncate_to_width("DEVNOW", inner_width))
-                .bold()
-                .fg(Color::Gray),
-            Line::from(truncate_to_width("D E V N O W", inner_width)).fg(DEVNOW_BRAND_ACCENT),
-            Line::from(truncate_to_width("TERMINAL AI AGENT", inner_width)).dim(),
-        ]
-    };
-    lines.push(fading_divider(inner_width));
-    lines
+    Line::from(vec![label.fg(crate::branding::ACCENT), body.fg(Color::Gray)])
 }
 
 impl HistoryCell for SessionHeaderHistoryCell {
@@ -3082,8 +3031,31 @@ mod tests {
     #[test]
     fn empty_agent_message_cell_transcript() {
         let cell = AgentMessageCell::new(vec![Line::default()], false);
-        assert_eq!(cell.transcript_lines(80), vec![Line::from("  ")]);
+        assert_eq!(
+            cell.transcript_lines(80),
+            vec![Line::from("  ").fg(crate::branding::TEXT).bg(Color::Black)]
+        );
         assert_eq!(cell.desired_transcript_height(80), 1);
+    }
+
+    #[test]
+    fn classic_hero_assistant_palette_preserves_code_color() {
+        let cell = AgentMessageCell::new(
+            vec![Line::from(vec!["Ready. ".into(), "code".cyan()])],
+            /*is_first_line*/ true,
+        );
+        let lines = cell.display_lines(80);
+        let code = lines[0].spans.iter().find(|span| span.content == "code").unwrap();
+        let rendered = format!(
+            "{}\nlabel: {:?}\ntext: {:?}\ncode: {:?}",
+            lines[0], lines[0].spans[0].style.fg, lines[0].style.fg, code.style.fg,
+        );
+        insta::assert_snapshot!(rendered, @r###"
+        assistant Ready. code
+        label: Some(Rgb(135, 206, 250))
+        text: Some(Rgb(224, 244, 255))
+        code: Some(Cyan)
+        "###);
     }
 
     #[test]
@@ -3621,43 +3593,42 @@ mod tests {
     }
 
     #[test]
-    fn devnow_brand_lines_wide_tier_fits_width_and_shows_spaced_wordmark() {
-        let lines = devnow_brand_lines(50);
+    fn devnow_brand_lines_wide_tier_fits_width_and_shows_pixel_wordmark() {
+        let lines = devnow_brand_lines(56);
         for line in &lines {
             assert!(
-                line_width(line) <= 50,
+                line_width(line) <= 56,
                 "line exceeded inner_width: {line:?}"
             );
         }
         let rendered = render_lines(&lines).join("\n");
-        assert!(rendered.contains("DEVNOW"));
-        assert!(rendered.contains("D E V N O W"));
+        assert!(rendered.contains("████  █████ █   █ █   █  ███  █   █"));
         assert_no_anywherenow(&lines);
     }
 
     #[test]
     fn devnow_brand_lines_show_pixel_robot_snapshot() {
-        let lines = devnow_brand_lines(50);
+        let lines = devnow_brand_lines(56);
         let rendered = render_lines(&lines).join("\n");
 
-        assert_eq!(lines.len(), 5);
-        assert!(rendered.contains("▄█████▄"));
-        assert!(rendered.contains("██ ▀ ▀ ██"));
-        assert!(rendered.contains("▀█████▀"));
+        assert_eq!(lines.len(), 11);
+        assert!(lines[..9].iter().all(|line| line.spans[..20]
+            .iter()
+            .all(|span| span.content == "▀")));
         insta::assert_snapshot!("devnow_pixel_robot_brand", rendered);
     }
 
     #[test]
     fn devnow_brand_lines_hide_robot_below_minimum_width() {
-        let lines = devnow_brand_lines(DEVNOW_ROBOT_MIN_WIDTH - 1);
+        let lines = devnow_brand_lines(crate::branding::ROBOT_MIN_WIDTH - 1);
         let rendered = render_lines(&lines).join("\n");
 
-        assert_eq!(lines.len(), 4);
+        assert_eq!(lines.len(), 2);
         assert!(!rendered.contains('█'));
         assert!(
             lines
                 .iter()
-                .all(|line| line_width(line) < DEVNOW_ROBOT_MIN_WIDTH)
+                .all(|line| line_width(line) < crate::branding::ROBOT_MIN_WIDTH)
         );
     }
 

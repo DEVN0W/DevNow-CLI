@@ -1,97 +1,55 @@
-## Contributing
+# Contributing to DevNow Agent
 
-**External contributions are by invitation only**
+Thanks for helping improve DevNow Agent. Bug reports, feature proposals, documentation changes, tests, and code contributions are welcome.
 
-At this time, the Codex team does not accept unsolicited code contributions.
+## Before you start
 
-If you would like to propose a new feature or a change in behavior, please open an issue describing the proposal or upvote an existing enhancement request. We prioritize new features based on community feedback, alignment with our roadmap, and consistency across all Codex surfaces (CLI, IDE extensions, web, etc.).
+1. Search the [issues](https://github.com/DEVN0W/DevNow-Agent/issues) to avoid duplicates.
+2. For a significant feature or architecture change, open an issue before investing in an implementation.
+3. Keep each pull request focused on one problem.
+4. Never include credentials, tokens, private prompts, customer data, or generated local configuration.
 
-If you encounter a bug, please open a bug report or verify that an existing report already covers the issue. If you would like to help, we encourage you to contribute by sharing analysis, reproduction details, root-cause hypotheses, or a high-level outline of a potential fix directly in the issue thread.
+## Development workflow
 
-The Codex team may invite an external contributor to submit a pull request when:
+1. Fork the repository and clone your fork.
+2. Create a topic branch from `master`, such as `feat/better-agent-routing` or `fix/windows-startup`.
+3. Make the smallest complete change that solves the issue.
+4. Add or update tests for behavior changes.
+5. Update user documentation and snapshots when output or the terminal UI changes.
+6. Run the checks that apply to the crates you changed.
+7. Open a pull request describing what changed, why it changed, and how it was tested.
 
-- the problem is well understood,
-- the proposed approach aligns with the team’s intended solution, and
-- the issue is deemed high-impact and high-priority.
+## Rust checks
 
-Pull requests that have not been explicitly invited by a member of the Codex team will be closed without review.
+Run commands from `devnow-rs`:
 
-**Why we do not generally accept external code contributions**
+```bash
+just fmt
+just fix -p <crate-you-changed>
+just argument-comment-lint
+cargo test -p <crate-you-changed>
+```
 
-In the past, the Codex team accepted external pull requests for bug fixes. While we appreciated the effort and engagement from the community, this model did not scale well.
+For TUI changes, run the relevant snapshot suite and review every new snapshot before accepting it:
 
-Many contributions were made without full visibility into the architectural context, system-level constraints, or near-term roadmap considerations that guide Codex development. Others focused on issues that were low priority or affected a very small subset of users. Reviewing and iterating on these PRs often took more time than implementing the fix directly, and diverted attention from higher-priority work.
+```bash
+cargo test -p codex-tui
+cargo insta pending-snapshots -p codex-tui
+```
 
-The most valuable contributions consistently came from community members who demonstrated deep understanding of a problem domain. That expertise is most helpful when shared early -- through detailed bug reports, analysis, and design discussion in issues. Identifying the right solution is typically the hard part; implementing it is comparatively straightforward with the help of Codex itself.
+If the parallel app-server TUI implements the same behavior, update and test it too.
 
-For these reasons, we focus external contributions on discussion, analysis, and feedback, and reserve code changes for cases where a targeted invitation makes sense.
+## Pull-request expectations
 
-### Development workflow
+- Explain the user-visible result.
+- Link the related issue when one exists.
+- Include focused tests and documentation.
+- Keep commits understandable and free of unrelated formatting churn.
+- Preserve the Apache 2.0 license and all applicable notices.
+- Confirm that no secrets or sensitive data are included.
 
-If you are invited by a Codex team member to contribute a PR, here is the recommended development workflow.
+Maintainers may request revisions for correctness, security, scope, test coverage, documentation, or long-term maintainability.
 
-- Create a _topic branch_ from `main` - e.g. `feat/interactive-prompt`.
-- Keep your changes focused. Multiple unrelated fixes should be opened as separate PRs.
-- Ensure your change is free of lint warnings and test failures.
+## Reporting security issues
 
-### Guidance for invited code contributions
-
-1. **Start with an issue.** Open a new one or comment on an existing discussion so we can agree on the solution before code is written.
-2. **Add or update tests.** A bug fix should generally come with test coverage that fails before your change and passes afterwards. 100% coverage is not required, but aim for meaningful assertions.
-3. **Document behavior.** If your change affects user-facing behavior, update the README, inline help (`codex --help`), or relevant example projects.
-4. **Keep commits atomic.** Each commit should compile and the tests should pass. This makes reviews and potential rollbacks easier.
-
-### Model metadata updates
-
-When a change updates model catalogs or model metadata (`/models` payloads, presets, or fixtures):
-
-- Set `input_modalities` explicitly for any model that does not support images.
-- Keep compatibility defaults in mind: omitted `input_modalities` currently implies text + image support.
-- Ensure client surfaces that accept images (for example, TUI paste/attach) consume the same capability signal.
-- Add/update tests that cover unsupported-image behavior and warning paths.
-
-### Opening a pull request (by invitation only)
-
-- Fill in the PR template (or include similar information) - **What? Why? How?**
-- Include a link to a bug report or enhancement request in the issue tracker
-- Run **all** checks locally. Use the root `just` helpers so you stay consistent with the rest of the workspace: `just fmt`, `just fix -p <crate>` for the crate you touched, and the relevant tests (e.g., `cargo test -p codex-tui` or `just test` if you need a full sweep). CI failures that could have been caught locally slow down the process.
-- Make sure your branch is up-to-date with `main` and that you have resolved merge conflicts.
-- Mark the PR as **Ready for review** only when you believe it is in a merge-able state.
-
-### Review process
-
-1. One maintainer will be assigned as a primary reviewer.
-2. If your invited PR introduces scope or behavior that was not previously discussed and approved, we may close the PR.
-3. We may ask for changes. Please do not take this personally. We value the work, but we also value consistency and long-term maintainability.
-4. When there is consensus that the PR meets the bar, a maintainer will squash-and-merge.
-
-### Community values
-
-- **Be kind and inclusive.** Treat others with respect; we follow the [Contributor Covenant](https://www.contributor-covenant.org/).
-- **Assume good intent.** Written communication is hard - err on the side of generosity.
-- **Teach & learn.** If you spot something confusing, open an issue or discussion with suggestions or clarifications.
-
-### Getting help
-
-If you run into problems setting up the project, would like feedback on an idea, or just want to say _hi_ - please open a Discussion topic or jump into the relevant issue. We are happy to help.
-
-Together we can make Codex CLI an incredible tool. **Happy hacking!** :rocket:
-
-### Contributor license agreement (CLA)
-
-All contributors **must** accept the CLA. The process is lightweight:
-
-1. Open your pull request.
-2. Paste the following comment (or reply `recheck` if you've signed before):
-
-   ```text
-   I have read the CLA Document and I hereby sign the CLA
-   ```
-
-3. The CLA-Assistant bot records your signature in the repo and marks the status check as passed.
-
-No special Git commands, email attachments, or commit footers required.
-
-### Security & responsible AI
-
-Have you discovered a vulnerability or have concerns about model output? Please e-mail **security@openai.com** and we will respond promptly.
+Do not disclose a suspected vulnerability in a public issue. Follow the private process in the [security policy](../SECURITY.md).

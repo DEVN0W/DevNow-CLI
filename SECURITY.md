@@ -1,13 +1,21 @@
 # Security Policy
 
-Thank you for helping us keep Codex secure!
+## Reporting a vulnerability
 
-## Reporting Security Issues
+Please do not disclose suspected vulnerabilities in a public issue, discussion, pull request, or commit.
 
-The security is essential to OpenAI's mission. We appreciate the work of security researchers acting in good faith to identify and responsibly report potential vulnerabilities, helping us maintain strong privacy and security standards for our users and technology.
+Use GitHub's private vulnerability reporting flow for this repository:
 
-Our security program is managed through Bugcrowd, and we ask that any validated vulnerabilities be reported via the [Bugcrowd program](https://bugcrowd.com/engagements/openai).
+https://github.com/DEVN0W/DevNow-Agent/security/advisories/new
 
-## Vulnerability Disclosure Program
+Include the affected version or commit, reproduction steps, impact, and any suggested mitigation. Do not include real credentials or customer data.
 
-Our Vulnerability Program Guidelines are defined on our [Bugcrowd program page](https://bugcrowd.com/engagements/openai).
+If private vulnerability reporting is not available, open a minimal issue asking a maintainer for a private contact channel. Do not include vulnerability details in that issue.
+
+## Supported versions
+
+Until the project publishes versioned releases, security fixes are made on the latest commit of the `master` branch. Users should update to the newest revision before reporting an issue that may already be fixed.
+
+## Scope
+
+Reports involving credential exposure, authentication, command execution, sandbox escape, unsafe file access, provider request leakage, or supply-chain compromise are especially important. Reports about model output quality without a concrete software security impact should use the normal issue tracker.
