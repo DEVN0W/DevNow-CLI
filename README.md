@@ -10,6 +10,7 @@
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-7fc8f8.svg" /></a>
   <a href="https://github.com/DEVN0W/DevNow-Agent/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/DEVN0W/DevNow-Agent" /></a>
   <a href="https://github.com/DEVN0W/DevNow-Agent/pulls"><img alt="Pull requests welcome" src="https://img.shields.io/badge/PRs-welcome-7fc8f8.svg" /></a>
+  <a href="https://github.com/DEVN0W/DevNow-Agent/issues/new"><img alt="Private AI with Ollama: inquire with us" src="https://img.shields.io/badge/Private_AI_with_Ollama-Inquire_with_us-7fc8f8.svg" /></a>
 </p>
 
 DevNow Agent works inside your local project, can edit and run code, and supports three operating modes: **Single AI**, **Multi-Agent**, and **Multi-Agent Strategic**. It is designed for developers who want a configurable agent experience that can use different model providers and specialized agent teams.
@@ -40,7 +41,9 @@ DevNow does not lock your agents to one AI provider. A single installation can u
 - **Ollama** for local or private AI deployments
 - **LM Studio** for locally hosted models
 
-For organizations that need a private AI environment, DevNow can connect to models hosted through Ollama so prompts and model traffic remain within infrastructure you control. A licensed private-AI deployment can be provided when required. The models you select remain subject to their respective provider and model licenses.
+> **Interested in the private Ollama version?** DevNow offers a licensed private-AI deployment for organizations that want prompts and model traffic to remain within infrastructure they control. [Inquire with the DevNow team](https://github.com/DEVN0W/DevNow-Agent/issues/new) for access, licensing, and deployment options.
+
+The models you select remain subject to their respective provider and model licenses.
 
 ## Requirements
 
