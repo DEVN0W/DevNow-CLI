@@ -53,7 +53,7 @@ jobs:
               labels: codex-windows-x64
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: dtolnay/rust-toolchain@1.93.0
         with:
