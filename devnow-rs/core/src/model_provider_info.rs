@@ -317,7 +317,7 @@ impl ModelProviderInfo {
 
     pub fn create_managed_devnow_gateway_provider() -> ModelProviderInfo {
         ModelProviderInfo {
-            name: "DevNow Gateway".into(),
+            name: "DevoNow Gateway".into(),
             base_url: None,
             env_key: None,
             env_key_instructions: Some(

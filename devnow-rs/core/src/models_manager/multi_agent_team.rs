@@ -145,8 +145,8 @@ fn validate_multi_agent_team(
             normalize_optional_string("agents.model_provider", agent.model_provider)?;
         let instructions = normalize_required_label("agents.instructions", agent.instructions)?;
         let weight = agent.weight.unwrap_or(0);
-        let passing_grade = agent.passing_grade.unwrap_or(100);
-        if passing_grade > 100 {
+        let passing_grade = agent.passing_grade;
+        if passing_grade.is_some_and(|passing_grade| passing_grade > 100) {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!(
@@ -170,7 +170,7 @@ fn validate_multi_agent_team(
             model,
             model_provider,
             weight,
-            passing_grade: Some(passing_grade),
+            passing_grade,
             next_on_pass: agent.next_on_pass,
             next_on_fail: agent.next_on_fail,
             instructions,
@@ -259,14 +259,21 @@ fn validate_multi_agent_team(
 
 impl MultiAgentTeamConfig {
     pub fn agent_for_role(&self, role_name: &str) -> Option<&MultiAgentAgentConfig> {
-        let role_aliases = role_name_aliases(role_name);
-        self.agents.iter().find(|agent| {
-            agent.name.eq_ignore_ascii_case(role_name)
-                || agent.role.eq_ignore_ascii_case(role_name)
-                || role_aliases.iter().any(|alias| {
-                    agent.name.eq_ignore_ascii_case(alias) || agent.role.eq_ignore_ascii_case(alias)
+        self.agents
+            .iter()
+            .find(|agent| {
+                agent.name.eq_ignore_ascii_case(role_name)
+                    || agent.role.eq_ignore_ascii_case(role_name)
+            })
+            .or_else(|| {
+                let role_aliases = role_name_aliases(role_name);
+                self.agents.iter().find(|agent| {
+                    role_aliases.iter().any(|alias| {
+                        agent.name.eq_ignore_ascii_case(alias)
+                            || agent.role.eq_ignore_ascii_case(alias)
+                    })
                 })
-        })
+            })
     }
 
     pub fn agent_for_request(&self, role_name: Option<&str>) -> Option<&MultiAgentAgentConfig> {
@@ -321,7 +328,10 @@ impl MultiAgentTeamConfig {
         }
 
         if self.uses_numeric_routing() {
-            return self.numeric_parallel_review_agents();
+            let numeric_reviewers = self.numeric_parallel_review_agents();
+            if !numeric_reviewers.is_empty() {
+                return numeric_reviewers;
+            }
         }
 
         let Some(developer) = self.developer_agent() else {

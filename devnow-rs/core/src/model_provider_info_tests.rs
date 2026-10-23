@@ -175,7 +175,7 @@ wire_api = "anthropicmessages"
 #[test]
 fn test_deserialize_managed_devnow_gateway_wire_api() {
     let provider_toml = r#"
-name = "DevNow Gateway"
+name = "DevoNow Gateway"
 wire_api = "managed_devnow_gateway"
         "#;
 
@@ -188,7 +188,7 @@ fn test_anthropic_provider_uses_retry_429_backoff() {
     let provider = ModelProviderInfo {
         name: "Claude on Foundry".into(),
         base_url: Some("https://example.services.ai.azure.com/anthropic".into()),
-        env_key: Some("AZURE_FOUNDRY_API_KEY".into()),
+        env_key: None,
         env_key_instructions: None,
         experimental_bearer_token: None,
         wire_api: WireApi::AnthropicMessages,

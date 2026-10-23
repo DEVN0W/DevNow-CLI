@@ -18,7 +18,7 @@ fn request_user_input_unavailable_messages_respect_default_mode_feature_flag() {
     );
     assert_eq!(
         request_user_input_unavailable_message(ModeKind::Default, false),
-        Some("request_user_input is unavailable in Default mode".to_string())
+        Some("request_user_input is unavailable in Single AI mode".to_string())
     );
     assert_eq!(
         request_user_input_unavailable_message(ModeKind::Default, true),
@@ -46,6 +46,6 @@ fn request_user_input_tool_description_mentions_available_modes() {
         );
     assert_eq!(
             request_user_input_tool_description(true),
-            "Request user input for one to three short questions and wait for the response. This tool is only available in Default or Plan mode.".to_string()
+            "Request user input for one to three short questions and wait for the response. This tool is only available in Single AI or Plan mode.".to_string()
         );
 }

@@ -1,81 +1,42 @@
-<p align="center">
-  <img src="assets/devnow-classic-hero-banner.png" alt="DevNow Agent" width="736" />
-</p>
+# DevoNow Agent
 
-<p align="center">
-  An open-source, terminal-first AI software engineering agent with single-agent and multi-agent workflows.
-</p>
-
-<p align="center">
-  <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-7fc8f8.svg" /></a>
-  <a href="https://github.com/DEVN0W/DevNow-Agent/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/DEVN0W/DevNow-Agent" /></a>
-  <a href="https://github.com/DEVN0W/DevNow-Agent/pulls"><img alt="Pull requests welcome" src="https://img.shields.io/badge/PRs-welcome-7fc8f8.svg" /></a>
-  <a href="https://github.com/DEVN0W/DevNow-Agent/issues/new"><img alt="Private AI with Ollama: inquire with us" src="https://img.shields.io/badge/Private_AI_with_Ollama-Inquire_with_us-7fc8f8.svg" /></a>
-</p>
-
-DevNow Agent works inside your local project, can edit and run code, and supports three operating modes: **Single AI**, **Multi-Agent**, and **Multi-Agent Strategic**. It is designed for developers who want a configurable agent experience that can use different model providers and specialized agent teams.
-
-DevNow Agent was created from the open-source code of [OpenAI Codex](https://github.com/openai/codex) and has been independently customized with DevNow branding, BYOAI provider support, and DevNow's multi-agent workflows. DevNow Agent is not presented as an official OpenAI product; the original copyright and attribution notices are retained in [NOTICE](NOTICE).
+DevoNow Agent is an open-source, terminal-first software engineering agent. It can inspect projects, edit files, run commands, and coordinate specialized agents while letting you choose the model provider that fits your environment.
 
 ## Highlights
 
-- A branded terminal UI built for day-to-day development work
-- Single-agent mode for focused tasks
-- Manual multi-agent delegation with `@agent-name`
-- Strategic multi-agent workflows with configurable routing and review loops
-- Bring Your Own AI (BYOAI) with Claude, OpenAI, Azure OpenAI, Azure AI Foundry, compatible endpoints, or local Ollama models
-- Configurable models, sandboxing, and approval policies
-- MCP server support and non-interactive execution
-- Open-source under the Apache License 2.0
-
-## Bring Your Own AI (BYOAI)
-
-DevNow does not lock your agents to one AI provider. A single installation can use different providers for different agents:
-
-- **Claude** through the DevNow gateway
-- **OpenAI** and OpenAI-compatible APIs
-- **Azure OpenAI** deployments
-- **Azure AI Foundry** projects and agents
-- **Ollama** for local or private AI deployments
-- **LM Studio** for locally hosted models
-
-> **Interested in the private Ollama version?** DevNow offers a licensed private-AI deployment for organizations that want prompts and model traffic to remain within infrastructure they control. [Inquire with the DevNow team](https://github.com/DEVN0W/DevNow-Agent/issues/new) for access, licensing, and deployment options.
-
-The models you select remain subject to their respective provider and model licenses.
+- Focused single-agent workflows
+- Manual delegation with `@agent-name`
+- Strategic multi-agent planning, implementation, review, and validation
+- Support for Claude, OpenAI-compatible APIs, Azure AI Foundry, Ollama, and LM Studio
+- Interactive terminal UI and non-interactive execution
+- Configurable approval and sandbox policies
+- Model Context Protocol (MCP) support
+- Apache 2.0 license
 
 ## Requirements
 
 - Git 2.23 or newer
-- Rust stable, including Cargo, `rustfmt`, and Clippy
+- Rust stable with Cargo, rustfmt, and Clippy
 - 4 GB RAM minimum; 8 GB recommended
 - macOS 12+, Ubuntu 20.04+/Debian 10+, or Windows 11
 
-On Windows, PowerShell can build the project natively. WSL2 is recommended when you want a Linux development environment.
-
 ## Install from source
 
-### 1. Clone the project
+Clone the repository and enter the Rust workspace:
 
 ```bash
-git clone --branch master https://github.com/DEVN0W/DevNow-Agent.git
+git clone https://github.com/DEVN0W/DevNow-Agent.git
 cd DevNow-Agent/devnow-rs
 ```
 
-### 2. Install Rust
-
-Install Rust with [rustup](https://rustup.rs/), then add the required components:
+Install the required Rust components and build the release binary:
 
 ```bash
 rustup component add rustfmt clippy
-```
-
-### 3. Build a release binary
-
-```bash
 cargo build --release --bin codex
 ```
 
-The Rust workspace currently produces an internal binary named `codex`. Install that artifact under the public `devnow` command:
+The workspace retains the internal `codex` binary name for upstream compatibility. Install it as the public `devnow` command.
 
 macOS or Linux:
 
@@ -83,23 +44,25 @@ macOS or Linux:
 mkdir -p "$HOME/.local/bin"
 cp target/release/codex "$HOME/.local/bin/devnow"
 chmod +x "$HOME/.local/bin/devnow"
-export PATH="$HOME/.local/bin:$PATH"
 ```
 
 Windows PowerShell:
 
 ```powershell
-$devNowBin = "$env:LOCALAPPDATA\DevNow\bin"
-New-Item -ItemType Directory -Force $devNowBin | Out-Null
-Copy-Item .\target\release\codex.exe "$devNowBin\devnow.exe"
-$env:Path = "$devNowBin;$env:Path"
+$devoNowBin = "$env:LOCALAPPDATA\DevoNow\bin"
+New-Item -ItemType Directory -Force $devoNowBin | Out-Null
+Copy-Item .\target\release\codex.exe "$devoNowBin\devnow.exe"
 ```
 
-Add the chosen binary directory to your shell profile or user `PATH` to keep the `devnow` command available after restarting the terminal.
+Add the installation directory to your `PATH`, then verify the command:
 
-### 4. Create a DevNow configuration directory
+```bash
+devnow --version
+```
 
-DevNow supports a custom configuration home through `CODEX_HOME`. Set it to a DevNow-owned directory so your settings stay separate from other tools.
+## Configure DevoNow
+
+DevoNow reads configuration from `CODEX_HOME`. The variable name is retained for compatibility with the upstream codebase.
 
 macOS or Linux:
 
@@ -115,13 +78,7 @@ $env:CODEX_HOME = "$HOME\.devnow"
 New-Item -ItemType Directory -Force $env:CODEX_HOME | Out-Null
 ```
 
-Persist `CODEX_HOME` in your shell profile or operating-system environment variables if you want to use the same location in future sessions.
-
-### 5. Configure a model provider
-
-Create `$CODEX_HOME/config.toml`. Never commit real API keys; store credentials in environment variables.
-
-Basic configuration:
+Create `$CODEX_HOME/config.toml`:
 
 ```toml
 model = "YOUR_MODEL_NAME"
@@ -129,180 +86,65 @@ approval_policy = "on-request"
 sandbox_mode = "workspace-write"
 ```
 
-For an OpenAI-compatible endpoint, add a provider:
+Provider credentials are read from environment variables and must not be committed to the repository. See [configuration](docs/config.md), [authentication](docs/authentication.md), and the [example configuration](docs/example-config.md) for provider-specific setup.
 
-```toml
-model = "YOUR_MODEL_NAME"
-model_provider = "my-provider"
-approval_policy = "on-request"
-sandbox_mode = "workspace-write"
+## Run
 
-[model_providers.my-provider]
-name = "My Provider"
-base_url = "https://YOUR-ENDPOINT.example/v1"
-env_key = "DEVNOW_API_KEY"
-wire_api = "responses"
-```
-
-Then set the credential in your terminal:
-
-```bash
-export DEVNOW_API_KEY="your-api-key"
-```
-
-Windows PowerShell:
-
-```powershell
-$env:DEVNOW_API_KEY = "your-api-key"
-```
-
-Azure OpenAI example:
-
-```toml
-model = "YOUR_AZURE_DEPLOYMENT_NAME"
-model_provider = "azure-openai"
-
-[model_providers.azure-openai]
-name = "Azure OpenAI"
-base_url = "https://YOUR-RESOURCE.openai.azure.com/openai"
-env_key = "AZURE_OPENAI_API_KEY"
-wire_api = "responses"
-query_params = { api-version = "YOUR_SUPPORTED_API_VERSION" }
-```
-
-Set `AZURE_OPENAI_API_KEY` in your environment before starting DevNow. Model names, endpoints, and API versions must match the provider account you use.
-
-Azure AI Foundry example:
-
-```toml
-model = "YOUR_MODEL_OR_AGENT_NAME"
-model_provider = "azure-foundry"
-
-[model_providers.azure-foundry]
-name = "Azure AI Foundry"
-base_url = "https://YOUR-PROJECT-ENDPOINT/api/projects/YOUR-PROJECT/openai/v1"
-env_key = "AZURE_FOUNDRY_API_KEY"
-wire_api = "responses"
-```
-
-For a Foundry agent, add the provider-specific reference required by your project:
-
-```toml
-extra_body = { agent_reference = { name = "YOUR-AGENT", version = "YOUR-VERSION", type = "agent_reference" } }
-```
-
-Claude example:
-
-```toml
-model = "YOUR_CLAUDE_MODEL"
-model_provider = "claude"
-```
-
-Set `DEVNOW_CLAUDE_API_KEY` before starting DevNow. You can optionally set `DEVNOW_CLAUDE_BASE_URL` when using a compatible managed endpoint.
-
-For private or local AI with Ollama, start Ollama and launch DevNow in local-model mode:
-
-```bash
-ollama serve
-devnow --oss --local-provider ollama
-```
-
-### 6. Start DevNow
-
-Open the project you want the agent to work on and run:
+Open the project you want DevoNow to work on:
 
 ```bash
 cd /path/to/your/project
 devnow
 ```
 
-Or start with an initial request:
+You can also supply an initial request:
 
 ```bash
 devnow "explain this project and suggest the first improvement"
 ```
 
-## Configure operating modes
+For non-interactive use:
 
-Use `/mode` inside the terminal UI to select a workflow. `/plan` remains available for planning within any mode.
+```bash
+devnow exec "review this change and report blocking issues"
+```
+
+## Operating modes
+
+Use `/mode` in the terminal UI to select a workflow.
 
 ### Single AI
 
-Single AI is the default. It uses the model and provider from `$CODEX_HOME/config.toml`; no additional roster file is required.
-
-Start from the included credential-free sample:
-
-macOS or Linux:
-
-```bash
-cp ../docs/single-ai.sample.toml "$CODEX_HOME/config.toml"
-```
-
-Windows PowerShell, when run from `devnow-rs`:
-
-```powershell
-Copy-Item ..\docs\single-ai.sample.toml "$env:CODEX_HOME\config.toml"
-```
-
-Replace `YOUR_MODEL_NAME` and optionally configure a provider as described above.
+Runs one agent with the model and provider configured in `config.toml`.
 
 ### Multi-Agent
 
-Multi-Agent gives you manual control over a team. Copy the included sample roster:
-
-macOS or Linux:
-
-```bash
-cp ../docs/agentic.sample.toml "$CODEX_HOME/agentic.toml"
-```
-
-Windows PowerShell, when run from `devnow-rs`:
-
-```powershell
-Copy-Item ..\docs\agentic.sample.toml "$env:CODEX_HOME\agentic.toml"
-```
-
-Edit each agent's `model` and `model_provider` to match your configuration. Select **Multi-Agent** with `/mode`, then address an agent at the beginning of a prompt:
+Lets you delegate directly to configured specialists:
 
 ```text
 @developer implement the requested API and add focused tests
 ```
 
-Multiple leading mentions can dispatch independent assignments:
-
-```text
-@principal-architect @developer review the design and implementation in parallel
-```
+Start with [docs/agentic.sample.toml](docs/agentic.sample.toml).
 
 ### Multi-Agent Strategic
 
-Strategic mode runs an automatic workflow containing roles such as architect, planner, developer, critic, security, quality, execution, and judge.
+Runs an orchestrated workflow across planning, implementation, review, quality, execution, and final judgment roles. Start with [docs/multi-agent.sample.toml](docs/multi-agent.sample.toml).
 
-Copy the strategic sample:
+## Documentation
 
-macOS or Linux:
-
-```bash
-cp ../docs/multi-agent.sample.toml "$CODEX_HOME/multi_agent.toml"
-```
-
-Windows PowerShell, when run from `devnow-rs`:
-
-```powershell
-Copy-Item ..\docs\multi-agent.sample.toml "$env:CODEX_HOME\multi_agent.toml"
-```
-
-Update the model/provider values, restart DevNow, and choose **Multi-Agent Strategic** from `/mode`.
-
-## Screenshots
-
-### Terminal experience
-
-![DevNow Agent terminal experience](assets/devnow-classic-hero-cli-preview.png)
+- [Getting started](docs/getting-started.md)
+- [Installation](docs/install.md)
+- [Configuration](docs/config.md)
+- [Authentication](docs/authentication.md)
+- [Sandbox modes](docs/sandbox.md)
+- [Execution policies](docs/execpolicy.md)
+- [Slash commands](docs/slash_commands.md)
+- [Agent instructions](docs/agents_md.md)
 
 ## Development
 
-From `devnow-rs`:
+Run commands from `devnow-rs`:
 
 ```bash
 cargo test -p codex-tui
@@ -311,10 +153,12 @@ just fmt
 just argument-comment-lint
 ```
 
-See [Contributing](docs/contributing.md) for the complete workflow. User configuration examples are available in [docs/config.md](docs/config.md), [Single AI](docs/single-ai.sample.toml), [Multi-Agent](docs/agentic.sample.toml), and [Multi-Agent Strategic](docs/multi-agent.sample.toml).
+See [CONTRIBUTING](docs/contributing.md) for the complete development workflow.
 
-## Open-source project
+## Contributing
 
-Bug reports, feature proposals, documentation improvements, and pull requests are welcome. Please read the [contribution guide](docs/contributing.md), [Code of Conduct](CODE_OF_CONDUCT.md), [support guide](SUPPORT.md), and [security policy](SECURITY.md) before participating. Maintainers can use the [open-source release checklist](OPEN_SOURCE.md) before publishing a release.
+Issues and pull requests are welcome. Please read the [contribution guide](docs/contributing.md), [Code of Conduct](CODE_OF_CONDUCT.md), and [support guide](SUPPORT.md) before participating.
 
-DevNow Agent is licensed under the [Apache License 2.0](LICENSE). It was created from the open-source OpenAI Codex codebase and includes substantial DevNow-specific customization. Required original copyright and third-party attribution notices are retained in [NOTICE](NOTICE).
+## License and attribution
+
+DevoNow Agent is licensed under the [Apache License 2.0](LICENSE). It is derived from the open-source [OpenAI Codex](https://github.com/openai/codex) codebase and is not an official OpenAI product. Required copyright, license, and third-party attribution notices are retained in [NOTICE](NOTICE).

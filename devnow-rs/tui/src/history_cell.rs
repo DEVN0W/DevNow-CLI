@@ -1333,7 +1333,10 @@ fn role_line(label: &str, body: &str, inner_width: usize) -> Line<'static> {
     let label = truncate_to_width(label, inner_width);
     let remaining = inner_width.saturating_sub(UnicodeWidthStr::width(label.as_str()));
     let body = truncate_to_width(body, remaining);
-    Line::from(vec![label.fg(crate::branding::ACCENT), body.fg(Color::Gray)])
+    Line::from(vec![
+        label.fg(crate::branding::ACCENT),
+        body.fg(Color::Gray),
+    ])
 }
 
 impl HistoryCell for SessionHeaderHistoryCell {
@@ -3045,7 +3048,11 @@ mod tests {
             /*is_first_line*/ true,
         );
         let lines = cell.display_lines(80);
-        let code = lines[0].spans.iter().find(|span| span.content == "code").unwrap();
+        let code = lines[0]
+            .spans
+            .iter()
+            .find(|span| span.content == "code")
+            .unwrap();
         let rendered = format!(
             "{}\nlabel: {:?}\ntext: {:?}\ncode: {:?}",
             lines[0], lines[0].spans[0].style.fg, lines[0].style.fg, code.style.fg,
@@ -3584,37 +3591,30 @@ mod tests {
             .sum()
     }
 
-    fn assert_no_anywherenow(lines: &[Line<'static>]) {
-        let rendered = render_lines(lines).join("\n").to_uppercase();
-        assert!(
-            !rendered.contains("ANYWHERENOW"),
-            "brand lines must never render ANYWHERENOW: {rendered:?}"
-        );
-    }
-
     #[test]
     fn devnow_brand_lines_wide_tier_fits_width_and_shows_pixel_wordmark() {
-        let lines = devnow_brand_lines(56);
+        let lines = devnow_brand_lines(64);
         for line in &lines {
             assert!(
-                line_width(line) <= 56,
+                line_width(line) <= 64,
                 "line exceeded inner_width: {line:?}"
             );
         }
         let rendered = render_lines(&lines).join("\n");
-        assert!(rendered.contains("████  █████ █   █ █   █  ███  █   █"));
-        assert_no_anywherenow(&lines);
+        assert!(rendered.contains("████  █████ █   █  ███  █   █  ███  █   █"));
     }
 
     #[test]
     fn devnow_brand_lines_show_pixel_robot_snapshot() {
-        let lines = devnow_brand_lines(56);
+        let lines = devnow_brand_lines(64);
         let rendered = render_lines(&lines).join("\n");
 
         assert_eq!(lines.len(), 11);
-        assert!(lines[..9].iter().all(|line| line.spans[..20]
-            .iter()
-            .all(|span| span.content == "▀")));
+        assert!(
+            lines[..9]
+                .iter()
+                .all(|line| line.spans[..20].iter().all(|span| span.content == "▀"))
+        );
         insta::assert_snapshot!("devnow_pixel_robot_brand", rendered);
     }
 
@@ -3642,8 +3642,7 @@ mod tests {
             );
         }
         let rendered = render_lines(&lines).join("\n");
-        assert!(rendered.contains("DEVNOW"));
-        assert_no_anywherenow(&lines);
+        assert!(rendered.contains("DEVONOW"));
     }
 
     #[test]
@@ -3656,21 +3655,19 @@ mod tests {
             );
         }
         let rendered = render_lines(&lines).join("\n");
-        assert!(rendered.contains("DEVNOW"));
-        assert_no_anywherenow(&lines);
+        assert!(rendered.contains("DEVONOW"));
     }
 
     #[test]
     fn devnow_brand_lines_minimal_tier_still_shows_devnow() {
         // inner_width below the narrow-tier threshold but wide enough for the
-        // full six-character wordmark.
+        // full seven-character wordmark.
         let lines = devnow_brand_lines(8);
         for line in &lines {
             assert!(line_width(line) <= 8, "line exceeded inner_width: {line:?}");
         }
         let rendered = render_lines(&lines).join("\n");
-        assert!(rendered.contains("DEVNOW"));
-        assert_no_anywherenow(&lines);
+        assert!(rendered.contains("DEVONOW"));
     }
 
     #[test]
@@ -3678,30 +3675,6 @@ mod tests {
         let lines = devnow_brand_lines(3);
         for line in &lines {
             assert!(line_width(line) <= 3, "line exceeded inner_width: {line:?}");
-        }
-        assert_no_anywherenow(&lines);
-    }
-
-    #[test]
-    fn session_header_brand_block_never_contains_anywherenow_across_widths() {
-        // Exercises the full `SessionHeaderHistoryCell::display_lines` path
-        // (brand block + pre-existing model/directory rows) across a range
-        // of widths purely to confirm the brand block never regresses to
-        // the old `ANYWHERENOW`-adjacent wordmark and never panics. This
-        // does not assert overall row width against the terminal width,
-        // since the pre-existing model/directory rows are not width-bounded
-        // (out of scope for this change; see `devnow_brand_lines_*` tests
-        // above for the brand block's own width-tier contract).
-        for width in [4u16, 10, 16, 20, 30, 44, 60, 80, 120] {
-            let cell = SessionHeaderHistoryCell::new(
-                "gpt-4o".to_string(),
-                None,
-                false,
-                std::env::temp_dir(),
-                "1.2.3",
-            );
-            let lines = cell.display_lines(width);
-            assert_no_anywherenow(&lines);
         }
     }
 

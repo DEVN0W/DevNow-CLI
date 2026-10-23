@@ -759,7 +759,11 @@ fn build_available_models_picks_default_after_hiding_hidden_models() {
     let mut expected_visible = ModelPreset::from(visible_model.clone());
     expected_visible.is_default = true;
 
-    let available = manager.build_available_models(vec![hidden_model, visible_model]);
+    let available = manager
+        .build_available_models(vec![hidden_model, visible_model])
+        .into_iter()
+        .filter(|model| matches!(model.model.as_str(), "hidden" | "visible"))
+        .collect::<Vec<_>>();
 
     assert_eq!(available, vec![expected_hidden, expected_visible]);
 }

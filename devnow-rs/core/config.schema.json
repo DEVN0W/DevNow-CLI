@@ -846,6 +846,9 @@
           "description": "Value to use with `Authorization: Bearer <token>` header. Use of this config is discouraged in favor of `env_key` for security reasons, but this may be necessary when using this programmatically.",
           "type": "string"
         },
+        "extra_body": {
+          "description": "Optional JSON body fields to merge into the request before sending."
+        },
         "http_headers": {
           "additionalProperties": {
             "type": "string"
@@ -863,34 +866,6 @@
           },
           "description": "Optional query parameters to append to the base URL.",
           "type": "object"
-        },
-        "extra_body": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "integer"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "type": "string"
-            },
-            {
-              "items": {},
-              "type": "array"
-            },
-            {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "Optional JSON body fields to merge into the request before sending."
         },
         "request_max_retries": {
           "description": "Maximum number of times to retry a failed HTTP request to this provider.",
@@ -1456,7 +1431,9 @@
         "low",
         "medium",
         "high",
-        "xhigh"
+        "xhigh",
+        "max",
+        "ultra"
       ],
       "type": "string"
     },
@@ -1865,6 +1842,20 @@
           "description": "The Responses API exposed by OpenAI at `/v1/responses`.",
           "enum": [
             "responses"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "The Anthropic Messages API exposed at `/v1/messages`.",
+          "enum": [
+            "anthropicmessages"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "The DevNow-managed localhost gateway, which exposes `/v1/responses`.",
+          "enum": [
+            "manageddevnowgateway"
           ],
           "type": "string"
         }

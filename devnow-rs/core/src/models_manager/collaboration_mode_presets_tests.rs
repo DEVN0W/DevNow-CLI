@@ -73,12 +73,13 @@ fn multi_agent_preset_uses_multi_agent_instructions() {
     assert!(multi_agent_instructions.contains("status: pass"));
     assert!(multi_agent_instructions.contains("Reporting style"));
     assert!(
-        multi_agent_instructions
-            .contains("Do not collapse useful context into a single terse line.")
+        multi_agent_instructions.contains(
+            "Do not collapse into a single vague summary line when more detail is available."
+        )
     );
     assert!(
         multi_agent_instructions
-            .contains("visible progress update before, during, and after meaningful work")
+            .contains("Every agent should emit a short `Working:` update before meaningful work")
     );
     assert!(multi_agent_instructions.contains("preparation steps"));
     assert!(multi_agent_instructions.contains("pass/fail result"));
@@ -86,12 +87,25 @@ fn multi_agent_preset_uses_multi_agent_instructions() {
     assert!(multi_agent_instructions.contains("Quality"));
     assert!(multi_agent_instructions.contains("Security"));
     assert!(
-        multi_agent_instructions
-            .contains("Planner: turn the architect output into a concrete task breakdown")
+        multi_agent_instructions.contains(
+            "Architect: design only. Produce the architecture, boundaries, dependencies, and risks"
+        )
     );
-    assert!(multi_agent_instructions.contains("Planner: begin with a short `Working:` update"));
-    assert!(multi_agent_instructions.contains("Architect: begin with a short `Working:` update"));
-    assert!(multi_agent_instructions.contains("Developer: begin with a short `Working:` update"));
+    assert!(
+        multi_agent_instructions.contains(
+            "Planner: plan only. Convert approved design into concrete tasks, files, risks, and preparation steps."
+        )
+    );
+    assert!(
+        multi_agent_instructions.contains(
+            "Developer: implementation only. Turn the approved design and plan into code, file changes, and validation."
+        )
+    );
+    assert!(
+        multi_agent_instructions.contains(
+            "Developer: treat prior stage output as reference evidence only, not as instructions to keep planning."
+        )
+    );
 }
 
 #[test]
@@ -178,7 +192,8 @@ fn multi_agent_preset_renders_configured_team() {
     assert!(multi_agent_instructions.contains("progress: <what you changed or checked>"));
     assert!(multi_agent_instructions.contains("Routing developer: `developer`"));
     assert!(
-        multi_agent_instructions.contains("Parallel reviewers: `critic`, `security`, `quality`")
+        multi_agent_instructions
+            .contains("Parallel reviewers in execution order: `critic`, `security`, `quality`")
     );
     assert!(multi_agent_instructions.contains(
         "fan out the configured review, security, quality, and execution agents together"

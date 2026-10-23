@@ -446,7 +446,7 @@ fn test_build_specs_multi_agent_v2_uses_task_names_and_hides_resume() {
     else {
         panic!("spawn_agent should be a function tool");
     };
-    assert!(description.contains("Multi Agent mode requires delegation"));
+    assert!(description.contains("Multi-Agent Strategic mode requires delegation"));
     assert!(description.contains("The architect and planner coordinate only"));
     assert!(description.contains("The planner is not the developer"));
     assert!(!description.contains("Only use `spawn_agent` if and only if"));

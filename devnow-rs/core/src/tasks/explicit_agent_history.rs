@@ -59,7 +59,7 @@ fn continuation_text(items: &[ResponseItem]) -> Option<String> {
     }
 
     let mut text = String::from(
-        "Continuation history from earlier manually delegated agents in this DevNow session. Use it as prior work and preserve its target workspace. The newest user instruction remains authoritative.\n\n",
+        "Continuation history from earlier manually delegated agents in this DevoNow session. Use it as prior work and preserve its target workspace. The newest user instruction remains authoritative.\n\n",
     );
     for entry in entries {
         if text.len().saturating_add(entry.len()) > MAX_CONTINUATION_CHARS {

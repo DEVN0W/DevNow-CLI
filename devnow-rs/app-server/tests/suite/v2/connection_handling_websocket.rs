@@ -185,7 +185,7 @@ async fn websocket_transport_verifies_signed_short_lived_bearer_tokens() -> Resu
     let server = create_mock_responses_server_sequence_unchecked(Vec::new()).await;
     let codex_home = TempDir::new()?;
     let shared_secret_file = codex_home.path().join("app-server-signing-secret");
-    let shared_secret = "0123456789abcdef0123456789abcdef";
+    let shared_secret = "0123456789abcdef0123456789abcdef"; // gitleaks:allow test fixture
     std::fs::write(&shared_secret_file, format!("{shared_secret}\n"))?;
     create_config_toml(codex_home.path(), &server.uri(), "never")?;
     let auth_args = vec![

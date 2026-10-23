@@ -3,7 +3,7 @@
 # in `config.toml` and environment variables. In Multi-Agent mode, use a leading
 # `@agent-name` prompt to explicitly dispatch one of these agents.
 
-team_name = "DevNow Manual Agent Team"
+team_name = "DevoNow Manual Agent Team"
 default_agent = "developer"
 
 [[agents]]

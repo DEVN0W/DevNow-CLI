@@ -4327,6 +4327,10 @@ model_verbosity = "high"
     let model_provider_map = {
         let mut model_provider_map = built_in_model_providers(/* openai_base_url */ None);
         model_provider_map.insert("openai-custom".to_string(), openai_custom_provider.clone());
+        model_provider_map.insert(
+            DEVNOW_GATEWAY_PROVIDER_ID.to_string(),
+            ModelProviderInfo::create_managed_devnow_gateway_provider(),
+        );
         model_provider_map
     };
 

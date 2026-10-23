@@ -1,6 +1,6 @@
-# Contributing to DevNow Agent
+# Contributing to DevoNow Agent
 
-Thanks for helping improve DevNow Agent. Bug reports, feature proposals, documentation changes, tests, and code contributions are welcome.
+Thanks for helping improve DevoNow Agent. Bug reports, feature proposals, documentation changes, tests, and code contributions are welcome.
 
 Participation is governed by the project [Code of Conduct](../CODE_OF_CONDUCT.md).
 
@@ -50,8 +50,4 @@ If the parallel app-server TUI implements the same behavior, update and test it 
 - Preserve the Apache 2.0 license and all applicable notices.
 - Confirm that no secrets or sensitive data are included.
 
-Maintainers may request revisions for correctness, security, scope, test coverage, documentation, or long-term maintainability.
-
-## Reporting security issues
-
-Do not disclose a suspected vulnerability in a public issue. Follow the private process in the [security policy](../SECURITY.md).
+Maintainers may request revisions for correctness, scope, test coverage, documentation, or long-term maintainability.

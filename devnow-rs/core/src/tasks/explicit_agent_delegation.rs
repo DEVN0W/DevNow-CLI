@@ -164,7 +164,7 @@ impl ExplicitAgentDelegationTask {
         apply_requested_workspace(&mut config, &input);
         let delegated_workspace = config.cwd.display().to_string();
         let workspace_directive = format!(
-            "Authoritative delegated workspace: {delegated_workspace}\nStart all file discovery, repository inspection, commands, edits, and validation in this exact directory. Do not inspect or operate on the parent DevNow launch repository unless the user explicitly names it as the target. Before acting, verify the working directory and correct it to this path if necessary."
+            "Authoritative delegated workspace: {delegated_workspace}\nStart all file discovery, repository inspection, commands, edits, and validation in this exact directory. Do not inspect or operate on the parent DevoNow launch repository unless the user explicitly names it as the target. Before acting, verify the working directory and correct it to this path if necessary."
         );
         config.developer_instructions = Some(match config.developer_instructions.take() {
             Some(instructions) if !instructions.trim().is_empty() => {

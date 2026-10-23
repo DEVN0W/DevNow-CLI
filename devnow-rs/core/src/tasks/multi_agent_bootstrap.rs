@@ -2084,9 +2084,9 @@ mod tests {
         let prefix = stage_prompt_prefix(&agent).expect("expected a planner prefix");
 
         assert!(prefix.contains("Working:"));
-        assert!(prefix.contains("planning only"));
+        assert!(prefix.contains("produce a plan only"));
         assert!(prefix.contains("Do not write implementation code"));
-        assert!(prefix.contains("developer owns implementation"));
+        assert!(prefix.contains("The developer owns implementation"));
     }
 
     #[test]
@@ -2168,7 +2168,7 @@ mod tests {
 
         assert!(rendered.contains("Completed stage output from Ampere [developer]"));
         assert!(rendered.contains("Stage status: Completed(Some(\"developer finished\"))"));
-        assert!(rendered.contains("reference evidence only"));
+        assert!(rendered.contains("Reference evidence only"));
         assert!(rendered.contains("hand off the current code snapshot and open findings only"));
         assert!(!rendered.contains("Stage transcript evidence"));
         assert!(!rendered.contains("user: create a python game"));
@@ -2322,7 +2322,7 @@ mod tests {
 
         let rendered = ledger.render().expect("expected open findings");
 
-        assert!(rendered.contains("roles: critic, security"));
+        assert!(rendered.contains("roles: security, critic"));
         assert_eq!(
             rendered
                 .matches("Missing evidence for the implementation.")
@@ -2475,7 +2475,7 @@ mod tests {
     fn review_grade_passed_uses_grade_over_status_text() {
         assert!(review_grade_passed(Some(90), 80));
         assert!(!review_grade_passed(Some(79), 80));
-        assert!(!review_grade_passed(Some(90), 80));
+        assert!(!review_grade_passed(None, 80));
     }
 
     #[test]

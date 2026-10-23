@@ -1,10 +1,10 @@
 # Configuration
 
-Start with the provider walkthrough in the root [README](../README.md#configure-a-model-provider). The generated schema for every supported setting is available at `devnow-rs/core/config.schema.json`.
+Start with the provider walkthrough in the root [README](../README.md#configure-devonow). The generated schema for every supported setting is available at `devnow-rs/core/config.schema.json`.
 
 ## Operating modes
 
-Use `/mode` to select one of DevNow's three operating modes:
+Use `/mode` to select one of DevoNow's three operating modes:
 
 - **Single AI** is the startup default and uses the model, provider, and runtime settings from `config.toml`.
 - **Multi-Agent** is manual orchestration. It loads `CODEX_HOME/agentic.toml`, but agents remain inactive until the root AI calls an agent tool such as `spawn_agent`.
@@ -15,7 +15,7 @@ Plan remains available through `/plan`; it is not a fourth `/mode` choice. `/col
 
 ## Model providers
 
-If you do not set a custom `model_provider`, DevNow uses the built-in `openai`
+If you do not set a custom `model_provider`, DevoNow uses the built-in `openai`
 provider. That is the default vanilla path.
 
 To use Azure OpenAI or another compatible backend, add a custom provider under
@@ -28,7 +28,7 @@ Minimal examples:
 # 1) Vanilla default: no `model_provider` and no custom provider block.
 
 [profiles.default]
-# model_provider is omitted, so DevNow uses the built-in `openai` provider.
+# model_provider is omitted, so DevoNow uses the built-in `openai` provider.
 ```
 
 ```toml
@@ -59,7 +59,7 @@ extra_body = { agent_reference = { name = "YOUR-FOUNDRY-AGENT", version = "YOUR-
 model_provider = "azure-foundry"
 ```
 
-DevNow merges `extra_body` into the request body only for the provider that
+DevoNow merges `extra_body` into the request body only for the provider that
 declares it, so you can keep OpenAI, Azure OpenAI, and Foundry side by side
 without changing the normal path for other agents. For Foundry, use the
 project endpoint plus `/openai/v1` so the final request path matches the
@@ -143,11 +143,11 @@ instructions = "Review code quality only."
 
 ## Connecting to MCP servers
 
-DevNow can connect to MCP servers configured in `$CODEX_HOME/config.toml`. Consult the generated schema at `devnow-rs/core/config.schema.json` for supported MCP fields.
+DevoNow can connect to MCP servers configured in `$CODEX_HOME/config.toml`. Consult the generated schema at `devnow-rs/core/config.schema.json` for supported MCP fields.
 
 ## MCP tool approvals
 
-DevNow stores per-tool approval overrides for custom MCP servers under
+DevoNow stores per-tool approval overrides for custom MCP servers under
 `mcp_servers` in `$CODEX_HOME/config.toml`:
 
 ```toml
@@ -163,9 +163,9 @@ and are labeled as connected; others are marked as can be installed.
 
 ## Notify
 
-DevNow can run a notification hook when the agent finishes a turn. Consult the generated configuration schema for the available notification fields.
+DevoNow can run a notification hook when the agent finishes a turn. Consult the generated configuration schema for the available notification fields.
 
-When DevNow knows which client started the turn, the legacy notify JSON payload also includes a top-level `client` field. The TUI currently reports the compatibility identifier `codex-tui`, and the app server reports the `clientInfo.name` value from `initialize`.
+When DevoNow knows which client started the turn, the legacy notify JSON payload also includes a top-level `client` field. The TUI currently reports the compatibility identifier `codex-tui`, and the app server reports the `clientInfo.name` value from `initialize`.
 
 ## JSON Schema
 
@@ -173,36 +173,36 @@ The generated JSON Schema for `config.toml` lives at `devnow-rs/core/config.sche
 
 ## SQLite State DB
 
-DevNow stores the SQLite-backed state DB under `sqlite_home` (config key) or the
+DevoNow stores the SQLite-backed state DB under `sqlite_home` (config key) or the
 `CODEX_SQLITE_HOME` environment variable. When unset, WorkspaceWrite sandbox
 sessions default to a temp directory; other modes default to `CODEX_HOME`.
 
 ## Custom CA Certificates
 
-DevNow can trust a custom root CA bundle for outbound HTTPS and secure websocket
+DevoNow can trust a custom root CA bundle for outbound HTTPS and secure websocket
 connections when enterprise proxies or gateways intercept TLS. This applies to
-login flows and to DevNow's other external connections, including components
+login flows and to DevoNow's other external connections, including components
 that build reqwest clients or secure websocket clients through the inherited
 `codex-client` CA-loading path and remote MCP connections that use it.
 
 Set `CODEX_CA_CERTIFICATE` to the path of a PEM file containing one or more
-certificate blocks to use a DevNow-specific CA bundle. This inherited variable
-name is retained for compatibility. If `CODEX_CA_CERTIFICATE` is unset, DevNow
-falls back to `SSL_CERT_FILE`. If neither variable is set, DevNow uses the
+certificate blocks to use a DevoNow-specific CA bundle. This inherited variable
+name is retained for compatibility. If `CODEX_CA_CERTIFICATE` is unset, DevoNow
+falls back to `SSL_CERT_FILE`. If neither variable is set, DevoNow uses the
 system root certificates.
 
 `CODEX_CA_CERTIFICATE` takes precedence over `SSL_CERT_FILE`. Empty values are
 treated as unset.
 
-The PEM file may contain multiple certificates. DevNow also tolerates OpenSSL
+The PEM file may contain multiple certificates. DevoNow also tolerates OpenSSL
 `TRUSTED CERTIFICATE` labels and ignores well-formed `X509 CRL` sections in the
-same bundle. If the file is empty, unreadable, or malformed, the affected DevNow
+same bundle. If the file is empty, unreadable, or malformed, the affected DevoNow
 HTTP or secure websocket connection reports a user-facing error that points
 back to these environment variables.
 
 ## Notices
 
-DevNow stores "do not show again" flags for some UI prompts under the `[notice]` table.
+DevoNow stores "do not show again" flags for some UI prompts under the `[notice]` table.
 
 ## Plan mode defaults
 
@@ -216,7 +216,7 @@ config value for "follow the global default in Plan mode".
 ## Realtime start instructions
 
 `experimental_realtime_start_instructions` lets you replace the built-in
-developer message DevNow inserts when realtime becomes active. It only affects
+developer message DevoNow inserts when realtime becomes active. It only affects
 the realtime start message in prompt history and does not change websocket
 backend prompt settings or the realtime end/inactive message.
 

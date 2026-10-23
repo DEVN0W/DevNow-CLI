@@ -1,6 +1,6 @@
-# Getting started with DevNow Agent
+# Getting started with DevoNow Agent
 
-Follow the [installation and configuration walkthrough](../README.md#install-from-source), then open the project you want DevNow to work on and run:
+Follow the [installation and configuration walkthrough](../README.md#install-from-source), then open the project you want DevoNow to work on and run:
 
 ```bash
 devnow

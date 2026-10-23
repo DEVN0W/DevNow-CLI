@@ -6800,7 +6800,7 @@ impl ChatWidget {
 
         self.bottom_pane.show_selection_view(SelectionViewParams {
             title: Some("Select Mode".to_string()),
-            subtitle: Some("Choose how DevNow handles your work.".to_string()),
+            subtitle: Some("Choose how DevoNow handles your work.".to_string()),
             footer_hint: Some(standard_popup_hint_line()),
             items,
             ..Default::default()

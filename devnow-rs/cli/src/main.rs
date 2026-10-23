@@ -53,7 +53,7 @@ use codex_features::Stage;
 use codex_features::is_known_feature_key;
 use codex_terminal_detection::TerminalName;
 
-/// Codex CLI
+/// DevoNow CLI
 ///
 /// If no subcommand is specified, options will be forwarded to the interactive CLI.
 #[derive(Debug, Parser)]

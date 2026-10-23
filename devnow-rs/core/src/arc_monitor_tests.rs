@@ -223,8 +223,6 @@ async fn build_arc_monitor_request_includes_relevant_history_and_null_policies()
                             "command": ["pwd"],
                             "timeout_ms": 1000,
                             "working_directory": "/tmp",
-                            "env": null,
-                            "user": null,
                         },
                     }]),
                 },

@@ -9,7 +9,9 @@ use crate::config::types::ShellEnvironmentPolicy;
 use crate::function_tool::FunctionCallError;
 use crate::model_provider_info::ModelProviderInfo;
 use crate::model_provider_info::WireApi;
+use crate::models_manager::collaboration_mode_presets::CollaborationModesConfig;
 use crate::models_manager::manager::ModelsManager;
+use crate::models_manager::multi_agent_team::load_multi_agent_team;
 use crate::protocol::AgentStatus;
 use crate::protocol::AskForApproval;
 use crate::protocol::EventMsg;
@@ -335,9 +337,17 @@ instructions = "Review the solution."
     let (mut session, turn) = make_session_and_context().await;
     let auth_manager = session.services.auth_manager.clone();
     let openai_provider = built_in_model_providers(/* openai_base_url */ None)["openai"].clone();
-    session.services.models_manager = Arc::new(ModelsManager::with_provider_for_tests(
+    let multi_agent_team = load_multi_agent_team(codex_home.path())
+        .expect("load multi-agent roster")
+        .expect("multi-agent roster should be present");
+    session.services.models_manager = Arc::new(ModelsManager::new_with_provider(
         codex_home.path().to_path_buf(),
         auth_manager,
+        /* model_catalog */ None,
+        CollaborationModesConfig {
+            multi_agent_team: Some(multi_agent_team),
+            ..Default::default()
+        },
         openai_provider,
     ));
 

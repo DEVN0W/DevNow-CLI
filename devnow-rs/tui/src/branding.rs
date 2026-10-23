@@ -35,11 +35,11 @@ const ROBOT: [&str; 18] = [
     "..BBBHHBBBBBBHHBBB..",
 ];
 const WORDMARK: [&str; 5] = [
-    "####  ##### #   # #   #  ###  #   #",
-    "#   # #     #   # ##  # #   # #   #",
-    "#   # ####  #   # # # # #   # # # #",
-    "#   # #      # #  #  ## #   # ## ##",
-    "####  #####   #   #   #  ###  #   #",
+    "####  ##### #   #  ###  #   #  ###  #   #",
+    "#   # #     #   # #   # ##  # #   # #   #",
+    "#   # ####  #   # #   # # # # #   # # # #",
+    "#   # #      # #  #   # #  ## #   # ## ##",
+    "####  #####   #    ###  #   #  ###  #   #",
 ];
 
 pub(crate) fn brand_lines(width: usize) -> Vec<Line<'static>> {
@@ -66,7 +66,7 @@ pub(crate) fn brand_lines(width: usize) -> Vec<Line<'static>> {
                         _ => "",
                     }
                 } else if index == 4 {
-                    "DEVNOW"
+                    "DEVONOW"
                 } else {
                     ""
                 };
@@ -79,7 +79,7 @@ pub(crate) fn brand_lines(width: usize) -> Vec<Line<'static>> {
             .collect::<Vec<_>>()
     } else {
         vec![
-            Line::from("DEVNOW".chars().take(width).collect::<String>())
+            Line::from("DEVONOW".chars().take(width).collect::<String>())
                 .fg(ACCENT)
                 .bg(Color::Black),
         ]

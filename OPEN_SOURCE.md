@@ -1,10 +1,10 @@
 # Open-Source Release Checklist
 
-DevNow Agent is distributed under the Apache License 2.0. Complete this checklist before publishing a source release or release artifact.
+DevoNow Agent is distributed under the Apache License 2.0. Complete this checklist before publishing a source release or release artifact.
 
 ## Repository contents
 
-- Keep [LICENSE](LICENSE), [NOTICE](NOTICE), [SECURITY.md](SECURITY.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [docs/contributing.md](docs/contributing.md) in the release.
+- Keep [LICENSE](LICENSE), [NOTICE](NOTICE), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [docs/contributing.md](docs/contributing.md) in the release.
 - Preserve upstream copyright, license, and third-party attribution notices.
 - Confirm new dependencies and vendored assets have compatible licenses and required notices.
 - Do not rename third-party products, API identifiers, compatibility environment variables, or upstream notices solely for branding.
@@ -21,7 +21,7 @@ DevNow Agent is distributed under the Apache License 2.0. Complete this checklis
 - Run the checks documented in [docs/contributing.md](docs/contributing.md) for changed crates.
 - Verify that a clean checkout can follow the installation instructions in [README.md](README.md).
 - Test Single AI, Multi-Agent, and Multi-Agent Strategic using the documented sample files.
-- Verify links, screenshots, issue templates, and the private vulnerability-reporting URL.
+- Verify links, screenshots, and issue templates.
 
 ## Release notes
 

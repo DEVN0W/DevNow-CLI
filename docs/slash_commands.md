@@ -1,6 +1,6 @@
 # Slash commands
 
-DevNow exposes interactive commands in the terminal composer. Important commands include:
+DevoNow exposes interactive commands in the terminal composer. Important commands include:
 
 - `/mode` selects Single AI, Multi-Agent, or Multi-Agent Strategic.
 - `/plan` switches planning behavior.

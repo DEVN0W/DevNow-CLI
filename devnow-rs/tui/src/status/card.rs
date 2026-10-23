@@ -423,7 +423,7 @@ impl HistoryCell for StatusHistoryCell {
             Span::from(format!("{}\u{25c9}\u{258c}  ", FieldFormatter::INDENT))
                 .red()
                 .bold(),
-            Span::from("DevNow").bold(),
+            Span::from("DevoNow").bold(),
             Span::from(" ").dim(),
             Span::from("AI").red().bold(),
             Span::from(" ").dim(),

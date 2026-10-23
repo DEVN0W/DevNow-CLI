@@ -1,2 +1,0 @@
-"""POS web application package."""
-

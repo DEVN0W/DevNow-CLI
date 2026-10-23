@@ -193,7 +193,7 @@ mod tests {
     use tempfile::tempdir;
 
     const VALID_ROSTER: &str = r#"
-team_name = "DevNow Manual Agent Team"
+team_name = "DevoNow Manual Agent Team"
 default_agent = "developer"
 
 [[agents]]

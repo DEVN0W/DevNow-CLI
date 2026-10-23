@@ -654,32 +654,32 @@ fn devnow_model_presets() -> Vec<ModelPreset> {
         (
             "claude-sonnet-5",
             "Claude Sonnet 5",
-            "Latest balanced Claude coding model via DevNow Gateway.",
+            "Latest balanced Claude coding model via DevoNow Gateway.",
         ),
         (
             "claude-sonnet-4-6",
             "Claude Sonnet 4.6",
-            "Fast, capable Claude model via DevNow Gateway.",
+            "Fast, capable Claude model via DevoNow Gateway.",
         ),
         (
             "claude-opus-4-8",
             "Claude Opus 4.8",
-            "Highest-capability Claude model via DevNow Gateway.",
+            "Highest-capability Claude model via DevoNow Gateway.",
         ),
         (
             "claude-fable-5",
             "Claude Fable 5",
-            "Senior architecture and long-horizon review model via DevNow Gateway.",
+            "Senior architecture and long-horizon review model via DevoNow Gateway.",
         ),
         (
             "claude-opus-4-7",
             "Claude Opus 4.7",
-            "Advanced Claude reasoning model via DevNow Gateway.",
+            "Advanced Claude reasoning model via DevoNow Gateway.",
         ),
         (
             "claude-haiku-4-5",
             "Claude Haiku 4.5",
-            "Fast, economical Claude model via DevNow Gateway.",
+            "Fast, economical Claude model via DevoNow Gateway.",
         ),
     ]
     .into_iter()

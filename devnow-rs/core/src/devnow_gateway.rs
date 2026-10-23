@@ -130,7 +130,7 @@ impl DevNowGatewayManager {
                     };
                     let diagnostic = dead.log_collector.finish(COLLECTOR_DRAIN_WAIT).await;
                     let message = format!(
-                        "DevNow Gateway exited unexpectedly: {}",
+                        "DevoNow Gateway exited unexpectedly: {}",
                         compose_failure_message(
                             &format!("process exited with status {status}"),
                             diagnostic.as_deref()
@@ -157,7 +157,7 @@ impl DevNowGatewayManager {
                 Ok(base_url)
             }
             Err(error) => {
-                let message = format!("DevNow Gateway failed to start: {error}");
+                let message = format!("DevoNow Gateway failed to start: {error}");
                 *state = GatewayState::Failed(message.clone());
                 Err(CodexErr::InvalidRequest(message))
             }
@@ -263,7 +263,7 @@ impl DevNowGatewayManager {
                 .await
                 .is_ok_and(|response| response.status().is_success())
             {
-                tracing::info!(port, pid = child.id(), "DevNow Gateway is ready");
+                tracing::info!(port, pid = child.id(), "DevoNow Gateway is ready");
                 return Ok(RunningGateway {
                     base_url,
                     model: model.to_string(),
@@ -628,7 +628,11 @@ mod tests {
             .await
             .expect_err("failed startup should remain failed");
         assert_eq!(first.to_string(), second.to_string());
-        assert!(first.to_string().contains("DevNow Gateway failed to start"));
+        assert!(
+            first
+                .to_string()
+                .contains("DevoNow Gateway failed to start")
+        );
     }
 
     /// A `tokio::io::AsyncRead` that yields fixed byte chunks in order and

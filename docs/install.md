@@ -1,4 +1,4 @@
-# Installing DevNow Agent
+# Installing DevoNow Agent
 
 The supported installation path is currently a release build from source. See the complete [installation guide](../README.md#install-from-source) for Linux, macOS, and Windows commands.
 
